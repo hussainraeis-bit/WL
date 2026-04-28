@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hussain's Master Watchlist</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0d0f;--surface:#141416;--surface2:#1c1c20;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#f0efe8;--muted:#888884;--faint:#444440;--accent:#e8c97d;--anime:#a89bdc;--show:#7eb8d4;--movie:#e89a7d;--or:#82d9c5;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh}
+header{padding:3rem 2rem 2rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem}
+.header-left h1{font-family:'Instrument Serif',serif;font-size:2.6rem;font-weight:400;line-height:1.1}
+.header-left h1 em{font-style:italic;color:var(--accent)}
+.header-left p{margin-top:.5rem;color:var(--muted);font-size:13px}
+.stats{display:flex;gap:2rem;flex-wrap:wrap}
+.stat{text-align:right}
+.stat-n{font-family:'DM Mono',monospace;font-size:1.6rem;font-weight:500;line-height:1}
+.stat-l{font-size:11px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.06em}
+.controls{padding:1.25rem 2rem;border-bottom:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.filter-btn{padding:5px 14px;border-radius:999px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.filter-btn:hover{border-color:rgba(255,255,255,.25);color:var(--text)}
+.filter-btn.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.filter-btn.f-anime.active{background:var(--anime);border-color:var(--anime);color:#13112a}
+.filter-btn.f-show.active{background:var(--show);border-color:var(--show);color:#091624}
+.filter-btn.f-movie.active{background:var(--movie);border-color:var(--movie);color:#2a1209}
+.filter-btn.f-or.active{background:var(--or);border-color:var(--or);color:#042a24}
+.add-btn{padding:6px 16px;border-radius:999px;border:1px solid var(--accent);background:rgba(232,201,125,.08);color:var(--accent);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap}
+.add-btn:hover{background:rgba(232,201,125,.18)}
+.progress-bar-wrap{display:flex;align-items:center;gap:10px}
+.progress-bar{width:140px;height:4px;background:var(--surface2);border-radius:2px}
+.progress-bar-fill{height:100%;border-radius:2px;background:var(--accent);transition:width .3s}
+.progress-text{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);white-space:nowrap}
+.list-container{padding:0 2rem 5rem}
+.rank-section{margin-top:2.5rem}
+.rank-section-header{display:flex;align-items:center;gap:12px;margin-bottom:.75rem}
+.rank-label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);font-family:'DM Mono',monospace;white-space:nowrap}
+.rank-line{flex:1;height:1px;background:var(--border)}
+.item{display:grid;grid-template-columns:28px 1fr auto;gap:0 14px;align-items:center;padding:9px 12px;border-radius:8px;transition:background .12s}
+.item:hover{background:var(--surface2)}
+.item.done{opacity:.35}
+.item.done .item-title{text-decoration:line-through;color:var(--faint)}
+.item-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--faint);text-align:right;user-select:none}
+.item-main{display:flex;align-items:center;gap:10px;min-width:0;cursor:pointer}
+.item-check{width:16px;height:16px;border-radius:4px;border:1px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.item.done .item-check{background:var(--accent);border-color:var(--accent)}
+.item-check svg{display:none}
+.item.done .item-check svg{display:block}
+.item-info{min-width:0}
+.item-title{font-size:14px;font-weight:400;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.item-sub{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-meta{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.type-badge{font-size:10px;padding:2px 8px;border-radius:999px;font-family:'DM Mono',monospace;letter-spacing:.03em;font-weight:500}
+.type-movie{background:rgba(232,154,125,.12);color:var(--movie);border:1px solid rgba(232,154,125,.2)}
+.type-anime{background:rgba(168,155,220,.12);color:var(--anime);border:1px solid rgba(168,155,220,.2)}
+.type-show{background:rgba(126,184,212,.12);color:var(--show);border:1px solid rgba(126,184,212,.2)}
+.or-badge{font-size:10px;padding:2px 7px;border-radius:4px;background:rgba(130,217,197,.1);color:var(--or);border:1px solid rgba(130,217,197,.2);white-space:nowrap}
+.source-badge{font-size:10px;padding:2px 7px;border-radius:4px;background:rgba(232,201,125,.08);color:rgba(232,201,125,.5);border:1px solid rgba(232,201,125,.12);white-space:nowrap}
+.source-planned{background:rgba(196,224,180,.08);color:rgba(196,224,180,.5);border:1px solid rgba(196,224,180,.12)}
+.custom-badge{background:rgba(232,201,125,.15);color:var(--accent);border:1px solid rgba(232,201,125,.3)}
+.franchise-tag{font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(255,255,255,.04);color:var(--faint);border:1px solid var(--border);white-space:nowrap}
+.imdb-btn{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;background:rgba(245,197,24,.1);color:#f5c518;border:1px solid rgba(245,197,24,.2);font-size:10px;font-family:'DM Mono',monospace;font-weight:500;cursor:pointer;text-decoration:none;transition:background .12s;white-space:nowrap}
+.imdb-btn:hover{background:rgba(245,197,24,.22)}
+.del-btn{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;background:rgba(232,100,100,.08);color:rgba(232,100,100,.6);border:1px solid rgba(232,100,100,.2);font-size:10px;font-family:'DM Mono',monospace;cursor:pointer;transition:background .12s;white-space:nowrap}
+.del-btn:hover{background:rgba(232,100,100,.2);color:#e86464}
+.duration{font-family:'DM Mono',monospace;font-size:11px;color:var(--faint);white-space:nowrap;min-width:60px;text-align:right}
+.total-time-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:10px 2rem;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted)}
+.total-time-bar strong{color:var(--text);font-family:'DM Mono',monospace}
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:1.5rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal h2{font-family:'Instrument Serif',serif;font-size:1.4rem;font-weight:400;margin-bottom:1.25rem}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.field input,.field select{width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none}
+.field input:focus,.field select:focus{border-color:var(--accent)}
+.field select option{background:var(--surface2)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field-note{font-size:11px;color:var(--faint);margin-top:4px}
+.modal-actions{display:flex;gap:8px;margin-top:1.5rem}
+.btn-primary{flex:1;padding:9px;border-radius:8px;background:var(--accent);color:#1a1500;border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer}
+.btn-secondary{padding:9px 16px;border-radius:8px;background:transparent;color:var(--muted);border:1px solid var(--border2);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer}
+.btn-primary:hover{opacity:.9}
+.btn-secondary:hover{color:var(--text);border-color:rgba(255,255,255,.25)}
+@media(max-width:640px){
+  header{padding:1.5rem 1rem 1rem}
+  .controls,.list-container{padding-left:1rem;padding-right:1rem}
+  .stats{gap:1rem}
+  .item{grid-template-columns:22px 1fr auto}
+  .source-badge,.source-planned,.or-badge,.franchise-tag{display:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>The <em>master</em> watchlist</h1>
+    <p>Sorted by total duration · Click item to mark watched · IMDb ↗ opens page</p>
+    <p style="margin-top:6px;font-size:12px" id="sync-status">⏳ Connecting…</p>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-n" id="stat-total">—</div><div class="stat-l">total titles</div></div>
+    <div class="stat"><div class="stat-n" id="stat-done" style="color:var(--accent)">0</div><div class="stat-l">watched</div></div>
+    <div class="stat"><div class="stat-n" id="stat-hours">—</div><div class="stat-l">hrs remaining</div></div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="filters">
+    <button class="filter-btn active" onclick="window.filterList('all',this)">All</button>
+    <button class="filter-btn f-movie" onclick="window.filterList('movie',this)">Movies</button>
+    <button class="filter-btn f-anime" onclick="window.filterList('anime',this)">Anime</button>
+    <button class="filter-btn f-show" onclick="window.filterList('show',this)">Shows</button>
+    <button class="filter-btn f-or" onclick="window.filterList('or',this)">OR / EM Films</button>
+    <button class="filter-btn" onclick="window.filterList('planned',this)">Planned anime</button>
+    <button class="filter-btn" onclick="window.filterList('rec',this)">Recommended</button>
+    <button class="filter-btn custom-badge" onclick="window.filterList('custom',this)">My additions</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <button class="add-btn" onclick="window.openModal()">+ Add title</button>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar"><div class="progress-bar-fill" id="prog-fill" style="width:0%"></div></div>
+      <span class="progress-text" id="prog-text">0 / —</span>
+    </div>
+  </div>
+</div>
+
+<div class="list-container" id="list"></div>
+
+<div class="total-time-bar">
+  <span><span style="color:var(--movie)">■</span> Movie &nbsp;<span style="color:var(--anime)">■</span> Anime &nbsp;<span style="color:var(--show)">■</span> Show &nbsp;<span style="color:var(--or)">■</span> OR/EM</span>
+  <span>Remaining: <strong id="footer-time">calculating…</strong></span>
+</div>
+
+<!-- Add Title Modal -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)window.closeModal()">
+  <div class="modal">
+    <h2>Add a title</h2>
+    <div class="field">
+      <label>Title *</label>
+      <input type="text" id="f-title" placeholder="e.g. Severance">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Type *</label>
+        <select id="f-type">
+          <option value="movie">Movie</option>
+          <option value="show">Show</option>
+          <option value="anime">Anime</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <select id="f-tag">
+          <option value="personal">Personal pick</option>
+          <option value="planned">Planned anime</option>
+          <option value="rec">Recommended</option>
+          <option value="or">OR / EM Film</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Genre</label>
+      <input type="text" id="f-genre" placeholder="e.g. Crime / Thriller">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label id="f-dur-label">Runtime (minutes) *</label>
+        <input type="number" id="f-mins" placeholder="e.g. 120" min="1">
+        <div class="field-note" id="f-dur-note">For a movie, enter total minutes</div>
+      </div>
+      <div class="field" id="f-eps-wrap" style="display:none">
+        <label>Episodes</label>
+        <input type="number" id="f-eps" placeholder="e.g. 24" min="1">
+      </div>
+    </div>
+    <div class="field">
+      <label>Extra info (year, cast, platform…)</label>
+      <input type="text" id="f-sub" placeholder="e.g. Netflix · 2023 · Ryan Reynolds">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="window.closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="window.submitAdd()">Add to list</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import{getFirestore,doc,getDoc,setDoc}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+  apiKey:"AIzaSyBrmKXcXeLMVPMDa8eR0h9ryWCsdZvKIEk",
+  authDomain:"hussain-watchlist.firebaseapp.com",
+  projectId:"hussain-watchlist",
+  storageBucket:"hussain-watchlist.firebasestorage.app",
+  messagingSenderId:"723310300304",
+  appId:"1:723310300304:web:2a5f0cddeb321edb7a5c15"
+};
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+const DOCREF=doc(db,"watchlist","progress");
+
+function setSyncStatus(s){
+  const el=document.getElementById('sync-status');
+  if(!el)return;
+  const map={saving:'⏳ Saving…',saved:'✓ Synced',error:'⚠ Sync error',loading:'⏳ Loading…'};
+  const col={saving:'var(--accent)',saved:'var(--or)',error:'#e87d7d',loading:'var(--accent)'};
+  el.textContent=map[s]||'';el.style.color=col[s]||'';
+}
+
+async function loadFromFirestore(){
+  setSyncStatus('loading');
+  try{
+    const snap=await getDoc(DOCREF);
+    if(snap.exists()){
+      const d=snap.data();
+      setSyncStatus('saved');
+      return{done:new Set(d.done||[]),custom:d.custom||[]};
+    }
+  }catch(e){setSyncStatus('error');console.error(e);}
+  setSyncStatus('saved');
+  return{done:new Set(),custom:[]};
+}
+
+async function saveToFirestore(){
+  setSyncStatus('saving');
+  try{
+    await setDoc(DOCREF,{done:[...doneSet],custom:customItems});
+    setSyncStatus('saved');
+  }catch(e){setSyncStatus('error');console.error(e);}
+}
+
+// ── Built-in data ─────────────────────────────────────────────
+const baseData=[
+  {rank:55,title:"Einstein and the Bomb",sub:"2024 · Netflix docu-drama · Oppenheimer from a different angle",type:"movie",genre:"Documentary / History",mins:75,tag:"personal"},
+  {rank:56,title:"Travelling Salesman",sub:"2012 · Four mathematicians solve P=NP · The OR problem on film",type:"movie",genre:"Drama / Math",mins:80,tag:"or",or:true},
+  {rank:57,title:"Bitconned",sub:"2023 · Netflix documentary · Crypto fraud case study",type:"movie",genre:"Documentary / Finance",mins:88,tag:"personal"},
+  {rank:1, title:"Pirates of Silicon Valley",sub:"1999 · Gates vs Jobs · Tech entrepreneurship & IP strategy",type:"movie",genre:"Tech / Business",mins:96,tag:"rec",or:true},
+  {rank:58,title:"Venom: Let There Be Carnage",sub:"2021 · Tom Hardy · Venom trilogy — Part 2",type:"movie",genre:"Action / Superhero",mins:97,tag:"personal",franchise:"Venom"},
+  {rank:2, title:"Too Big to Fail",sub:"2011 · HBO · 2008 crisis leadership — essential for EM",type:"movie",genre:"Finance / Drama",mins:98,tag:"rec",or:true},
+  {rank:59,title:"Ride On",sub:"2023 · Jackie Chan · Stunt performer action-comedy",type:"movie",genre:"Action / Comedy",mins:100,tag:"personal"},
+  {rank:60,title:"The Bibi Files",sub:"2024 · Documentary on Netanyahu's corruption trials",type:"movie",genre:"Documentary / Politics",mins:100,tag:"personal"},
+  {rank:3, title:"Inside Job",sub:"2010 · Oscar-winning doc · How financial systems collapse",type:"movie",genre:"Documentary / Finance",mins:105,tag:"rec",or:true},
+  {rank:61,title:"Bob Marley: One Love",sub:"2024 · Kingsley Ben-Adir · Biographical drama",type:"movie",genre:"Biographical / Music",mins:107,tag:"personal"},
+  {rank:4, title:"Margin Call",sub:"2011 · Jeremy Irons · One night before Wall Street collapse",type:"movie",genre:"Finance / Thriller",mins:107,tag:"rec",or:true},
+  {rank:5, title:"Deepwater Horizon",sub:"2016 · Mark Wahlberg · BP rig disaster · safety management failure",type:"movie",genre:"Action / Industrial Safety",mins:107,tag:"rec",or:true},
+  {rank:62,title:"The Union",sub:"2024 · Netflix · Mark Wahlberg & Halle Berry · action-comedy",type:"movie",genre:"Action / Comedy",mins:108,tag:"personal"},
+  {rank:63,title:"Venom: The Last Dance",sub:"2024 · Tom Hardy · Venom trilogy — Part 3 (final)",type:"movie",genre:"Action / Superhero",mins:109,tag:"personal",franchise:"Venom"},
+  {rank:6, title:"Enron: The Smartest Guys in the Room",sub:"2005 · Greatest corporate governance failure on film",type:"movie",genre:"Documentary / Business",mins:110,tag:"rec",or:true},
+  {rank:64,title:"Venom",sub:"2018 · Tom Hardy · Eddie Brock origin · Venom trilogy — Part 1",type:"movie",genre:"Action / Superhero",mins:112,tag:"personal",franchise:"Venom"},
+  {rank:65,title:"The Imitation Game",sub:"2014 · Benedict Cumberbatch · Turing breaking Enigma = combinatorial OR",type:"movie",genre:"Drama / Historical",mins:114,tag:"or",or:true},
+  {rank:7, title:"The Founder",sub:"2016 · Michael Keaton · McDonald's operations & process standardization",type:"movie",genre:"Business / Operations",mins:115,tag:"rec",or:true},
+  {rank:66,title:"The Family Plan",sub:"2023 · Mark Wahlberg · Netflix action-comedy",type:"movie",genre:"Action / Comedy",mins:118,tag:"personal"},
+  {rank:8, title:"The Social Network",sub:"2010 · Jesse Eisenberg · Facebook founding & scaling strategy",type:"movie",genre:"Tech / Drama",mins:120,tag:"rec",or:true},
+  {rank:67,title:"BlackBerry",sub:"2023 · Rise & fall of BlackBerry · tech management case study",type:"movie",genre:"Tech / Drama",mins:121,tag:"personal"},
+  {rank:68,title:"21",sub:"2008 · MIT blackjack team · Probability & decision-making under uncertainty",type:"movie",genre:"Thriller / Math",mins:123,tag:"or",or:true},
+  {rank:9, title:"Joy",sub:"2015 · Jennifer Lawrence · Manufacturing entrepreneur & supply chain",type:"movie",genre:"Drama / Business",mins:124,tag:"rec",or:true},
+  {rank:69,title:"Hidden Figures",sub:"2016 · NASA mathematicians · Numerical methods & constraints under pressure",type:"movie",genre:"Drama / Math",mins:127,tag:"or",or:true},
+  {rank:70,title:"6 Underground",sub:"2019 · Ryan Reynolds · Michael Bay action-thriller · Netflix",type:"movie",genre:"Action / Thriller",mins:128,tag:"personal"},
+  {rank:10,title:"The Big Short",sub:"2015 · Christian Bale · Mortgage crisis · essential for trading mindset",type:"movie",genre:"Finance / Comedy-Drama",mins:130,tag:"rec",or:true},
+  {rank:71,title:"Ferrari",sub:"2023 · Adam Driver · Enzo Ferrari · engineering trade-offs vs. corporate pressure",type:"movie",genre:"Drama / Historical",mins:130,tag:"personal"},
+  {rank:72,title:"Legend",sub:"2015 · Tom Hardy (x2) · Kray twins · British gangster film",type:"movie",genre:"Crime / Biographical",mins:131,tag:"personal"},
+  {rank:73,title:"Rebel Ridge",sub:"2024 · Aaron Pierre · Netflix action thriller",type:"movie",genre:"Action / Thriller",mins:132,tag:"personal"},
+  {rank:11,title:"Moneyball",sub:"2011 · Brad Pitt · Analytics-driven team optimization · core OR",type:"movie",genre:"Drama / Analytics",mins:133,tag:"rec",or:true},
+  {rank:74,title:"Gran Turismo",sub:"2023 · David Harbour · Gamer becomes real racing driver",type:"movie",genre:"Action / Drama",mins:135,tag:"personal"},
+  {rank:75,title:"A Beautiful Mind",sub:"2001 · Russell Crowe · John Nash · Game theory & OR foundations",type:"movie",genre:"Drama / Math",mins:135,tag:"or",or:true},
+  {rank:76,title:"Reagan",sub:"2024 · Dennis Quaid · Ronald Reagan biographical drama",type:"movie",genre:"Biographical / Political",mins:138,tag:"personal"},
+  {rank:12,title:"The Martian",sub:"2015 · Matt Damon · Engineering survival under hard resource constraints",type:"movie",genre:"Sci-Fi / Engineering",mins:144,tag:"rec",or:true},
+  {rank:13,title:"Ford v Ferrari",sub:"2019 · Bale & Damon · Engineering quality vs. corporate bureaucracy",type:"movie",genre:"Drama / Engineering",mins:152,tag:"rec",or:true},
+  {rank:77,title:"The Revenant",sub:"2015 · Leonardo DiCaprio · Oscar-winning survival epic",type:"movie",genre:"Action / Adventure",mins:156,tag:"personal"},
+  {rank:78,title:"Oppenheimer",sub:"2023 · Cillian Murphy · Nolan · Manhattan Project",type:"movie",genre:"Drama / Historical",mins:180,tag:"personal"},
+  {rank:14,title:"The Wolf of Wall Street",sub:"2013 · DiCaprio · Sales culture, incentive design & ethics collapse",type:"movie",genre:"Crime / Finance",mins:180,tag:"rec",or:true},
+  {rank:15,title:"God of High School",sub:"Crunchyroll · 2020 · 13 eps · Martial arts tournament with divine twists",type:"anime",genre:"Action / Supernatural",mins:312,tag:"planned",eps:13},
+  {rank:16,title:"Tower of God",sub:"Crunchyroll · 2020–2024 · 13 eps S1 · Climb the tower to get anything",type:"anime",genre:"Action / Fantasy",mins:312,tag:"planned",eps:13},
+  {rank:17,title:"True Detective — Season 1",sub:"HBO · 2014 · 8 eps · McConaughey & Harrelson · Louisiana homicide",type:"show",genre:"Crime / Thriller",mins:440,tag:"rec",eps:8},
+  {rank:18,title:"Daredevil: Born Again",sub:"Disney+ · 2025 · 9 eps · Netflix Daredevil continues — same cast & tone",type:"show",genre:"Superhero / Crime",mins:450,tag:"rec",eps:9},
+  {rank:20,title:"Invincible",sub:"Amazon · 2021– · 16 eps · Animated superhero — brutal and emotionally honest",type:"show",genre:"Animated / Superhero",mins:480,tag:"rec",eps:16},
+  {rank:19,title:"Shogun",sub:"FX · 2024 · 10 eps · Feudal Japan political intrigue · Emmy sweep",type:"show",genre:"Historical / Drama",mins:600,tag:"rec",eps:10},
+  {rank:21,title:"Parasyte: The Maxim",sub:"Madhouse · 2014 · 24 eps · Body horror sci-fi thriller",type:"anime",genre:"Sci-Fi / Horror",mins:576,tag:"planned",eps:24},
+  {rank:22,title:"One Punch Man",sub:"Madhouse · 2015 · 24 eps · Superhero genre satire done brilliantly",type:"anime",genre:"Action / Comedy",mins:576,tag:"planned",eps:24},
+  {rank:23,title:"Ragna Crimson",sub:"Silver Link · 2023 · 24 eps · Dragon slayer dark fantasy",type:"anime",genre:"Action / Dark Fantasy",mins:576,tag:"planned",eps:24},
+  {rank:24,title:"Rurouni Kenshin (2023)",sub:"Liden Films · 2023 · 24 eps · Legendary swordsman's redemption",type:"anime",genre:"Action / Historical",mins:576,tag:"planned",eps:24},
+  {rank:25,title:"Made in Abyss",sub:"Kinema Citrus · 2017 · 25 eps · Dark fantasy descent — deceptively brutal",type:"anime",genre:"Adventure / Dark Fantasy",mins:600,tag:"planned",eps:25},
+  {rank:26,title:"Frieren: Beyond Journey's End",sub:"Madhouse · 2023 · 28 eps · Quiet & emotional — unlike anything you've watched",type:"anime",genre:"Fantasy / Slice of Life",mins:672,tag:"rec",eps:28},
+  {rank:79,title:"Ramy",sub:"Hulu · 2019–2022 · 30 eps · Muslim-American identity comedy — very funny",type:"show",genre:"Comedy / Drama",mins:660,tag:"personal",eps:30},
+  {rank:27,title:"Severance",sub:"Apple TV+ · 2022– · 19 eps · Work/life surgical separation — mind-bending",type:"show",genre:"Sci-Fi / Thriller",mins:855,tag:"rec",eps:19},
+  {rank:80,title:"Barry",sub:"HBO · 2018–2023 · 32 eps · Hitman tries acting · dark comedy masterpiece",type:"show",genre:"Dark Comedy / Crime",mins:960,tag:"personal",eps:32},
+  {rank:28,title:"Mindhunter",sub:"Netflix · 2017 · 19 eps · FBI serial killer profiling origin story",type:"show",genre:"Crime / Thriller",mins:950,tag:"rec",eps:19},
+  {rank:29,title:"House of the Dragon",sub:"HBO · 2022– · 18 eps · GoT prequel — more consistent, just as brutal",type:"show",genre:"Fantasy / Drama",mins:1080,tag:"rec",eps:18},
+  {rank:30,title:"Slow Horses",sub:"Apple TV+ · 2022– · 24 eps · British intelligence misfits · Gary Oldman",type:"show",genre:"Spy / Thriller",mins:1080,tag:"rec",eps:24},
+  {rank:31,title:"To Your Eternity",sub:"Brain's Base · 2021 · 40 eps · Immortal being experiencing humanity",type:"anime",genre:"Drama / Supernatural",mins:960,tag:"planned",eps:40},
+  {rank:32,title:"Assassination Classroom",sub:"Lerche · 2015 · 47 eps · Students must kill their alien teacher",type:"anime",genre:"Action / Comedy",mins:1128,tag:"planned",eps:47},
+  {rank:33,title:"Vinland Saga",sub:"WIT/MAPPA · 2019 · 48 eps · Vikings anime — war, revenge, redemption",type:"anime",genre:"Action / Historical",mins:1152,tag:"rec",eps:48},
+  {rank:34,title:"Re:Zero",sub:"White Fox · 2016 · 50 eps · Isekai with brutal time-loop death mechanic",type:"anime",genre:"Isekai / Dark Fantasy",mins:1200,tag:"planned",eps:50},
+  {rank:35,title:"Fullmetal Alchemist (2003)",sub:"Bones · 2003 · 51 eps · Watch this FIRST before Brotherhood",type:"anime",genre:"Action / Fantasy",mins:1224,tag:"planned",eps:51},
+  {rank:36,title:"Abbott Elementary",sub:"ABC · 2021– · 57 eps · Teacher mockumentary · best sitcom currently airing",type:"show",genre:"Comedy / Mockumentary",mins:1254,tag:"rec",eps:57},
+  {rank:37,title:"Demon Slayer",sub:"Ufotable · 2019– · 55 eps · Breathtaking animation quality · emotional story",type:"anime",genre:"Action / Supernatural",mins:1320,tag:"planned",eps:55},
+  {rank:38,title:"Bungo Stray Dogs",sub:"Bones · 2016– · 60 eps · Literary figures as superpowered detectives",type:"anime",genre:"Action / Supernatural",mins:1440,tag:"planned",eps:60},
+  {rank:40,title:"Jujutsu Kaisen",sub:"MAPPA · 2020– · 63 eps · Already watching — S3 ongoing",type:"anime",genre:"Action / Supernatural",mins:1512,tag:"planned",eps:63},
+  {rank:39,title:"Fullmetal Alchemist: Brotherhood",sub:"Bones · 2009 · 64 eps · Definitive FMA — watch after 2003 version",type:"anime",genre:"Action / Adventure",mins:1536,tag:"planned",eps:64},
+  {rank:41,title:"Kuroko no Basket",sub:"Production I.G · 2012 · 75 eps · Supernatural basketball sports anime",type:"anime",genre:"Sports / Action",mins:1800,tag:"planned",eps:75},
+  {rank:42,title:"The Boys",sub:"Amazon · 2019– · 32 eps · Dark satirical superhero — brilliant writing",type:"show",genre:"Superhero / Satire",mins:1920,tag:"rec",eps:32},
+  {rank:43,title:"Food Wars! Shokugeki no Soma",sub:"JC Staff · 2015 · 86 eps · Cooking battles — absurd and deeply addictive",type:"anime",genre:"Cooking / Action",mins:2064,tag:"planned",eps:86},
+  {rank:44,title:"Attack on Titan",sub:"MAPPA · 2013–2023 · 87 eps · The defining anime of the decade — mandatory",type:"anime",genre:"Action / Dark Fantasy",mins:2088,tag:"rec",eps:87},
+  {rank:45,title:"Succession",sub:"HBO · 2018–2023 · 39 eps · Media dynasty power war — peak TV writing",type:"show",genre:"Drama / Dark Comedy",mins:2145,tag:"rec",eps:39},
+  {rank:46,title:"The Seven Deadly Sins",sub:"A-1 Pictures · 2014 · 100 eps · Knights and demons epic fantasy",type:"anime",genre:"Action / Fantasy",mins:2400,tag:"planned",eps:100},
+  {rank:47,title:"Ozark",sub:"Netflix · 2017–2022 · 44 eps · Cartel money laundering family drama",type:"show",genre:"Crime / Thriller",mins:2420,tag:"rec",eps:44},
+  {rank:48,title:"Parks and Recreation",sub:"NBC · 2009–2015 · 125 eps · Local government comedy · warm & very funny",type:"show",genre:"Comedy / Mockumentary",mins:2750,tag:"rec",eps:125},
+  {rank:49,title:"Better Call Saul",sub:"AMC · 2015–2022 · 63 eps · Breaking Bad prequel — many say it's better",type:"show",genre:"Crime / Drama",mins:3150,tag:"rec",eps:63},
+  {rank:50,title:"My Hero Academia",sub:"Bones · 2016– · 138 eps · Superhero school in a world of quirks",type:"anime",genre:"Action / Superhero",mins:3312,tag:"planned",eps:138},
+  {rank:51,title:"Hunter x Hunter (2011)",sub:"Madhouse · 2011 · 148 eps · Near-perfect long-form storytelling",type:"anime",genre:"Action / Adventure",mins:3552,tag:"planned",eps:148},
+  {rank:52,title:"It's Always Sunny in Philadelphia",sub:"FX · 2005– · 168 eps · Longest-running US live-action comedy",type:"show",genre:"Dark Comedy",mins:3696,tag:"rec",eps:168},
+  {rank:53,title:"Black Clover",sub:"Pierrot · 2017 · 170 eps · Magic knights — slow start, huge payoff",type:"anime",genre:"Action / Fantasy",mins:4080,tag:"planned",eps:170},
+  {rank:81,title:"Mad Men",sub:"AMC · 2007–2015 · 92 eps · 1960s advertising — stunning writing & era craft",type:"show",genre:"Drama / Period",mins:4324,tag:"personal",eps:92},
+  {rank:54,title:"The Office (US)",sub:"NBC · 2005–2013 · 201 eps · The undisputed comfort-rewatch champion",type:"show",genre:"Comedy / Mockumentary",mins:4422,tag:"rec",eps:201},
+];
+
+// ── State ─────────────────────────────────────────────────────
+let doneSet=new Set();
+let customItems=[];  // [{rank,title,sub,type,genre,mins,eps,tag,or,custom}]
+let activeFilter='all';
+const CUSTOM_RANK_START=1000; // custom items get ranks 1000+
+
+function allData(){
+  return [...baseData,...customItems];
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function fmtDur(mins,eps){
+  const h=Math.floor(mins/60),m=mins%60;
+  return eps?`${eps} eps · ${h}h${m?m+'m':''}`:`${h}h ${m}m`;
+}
+function fmtHours(mins){
+  if(mins>24*60)return`${(mins/60/24).toFixed(1)} days`;
+  const h=Math.floor(mins/60),m=mins%60;
+  return`${h}h ${m}m`;
+}
+function matchesFilter(d){
+  if(activeFilter==='all')     return true;
+  if(activeFilter==='movie')   return d.type==='movie';
+  if(activeFilter==='anime')   return d.type==='anime';
+  if(activeFilter==='show')    return d.type==='show';
+  if(activeFilter==='or')      return d.or===true;
+  if(activeFilter==='planned') return d.tag==='planned';
+  if(activeFilter==='rec')     return d.tag==='rec';
+  if(activeFilter==='custom')  return d.custom===true;
+  return true;
+}
+
+const tiers=[
+  {label:'Quick watch — under 2 hours',max:120},
+  {label:'Short — 2 to 8 hours',max:480},
+  {label:'Medium — 8 to 20 hours',max:1200},
+  {label:'Long haul — 20 to 50 hours',max:3000},
+  {label:'Marathon — 50+ hours',max:Infinity},
+];
+
+// ── Render ────────────────────────────────────────────────────
+function render(){
+  const list=document.getElementById('list');
+  const visible=[...allData()].sort((a,b)=>a.mins-b.mins).filter(matchesFilter);
+  if(!visible.length){
+    list.innerHTML='<div style="padding:3rem;text-align:center;color:var(--muted)">No titles match this filter.</div>';
+    updateStats(visible);return;
+  }
+  let html='',counter=1;
+  tiers.forEach((tier,ti)=>{
+    const prevMax=ti===0?0:tiers[ti-1].max;
+    const items=visible.filter(d=>d.mins>prevMax&&d.mins<=tier.max);
+    if(!items.length)return;
+    html+=`<div class="rank-section"><div class="rank-section-header"><span class="rank-label">${tier.label}</span><div class="rank-line"></div></div>`;
+    items.forEach(d=>{
+      const done=doneSet.has(d.rank);
+      const orBadge=d.or?`<span class="or-badge">OR/EM</span>`:'';
+      const fBadge=d.franchise?`<span class="franchise-tag">${d.franchise}</span>`:'';
+      const srcClass=d.custom?'source-badge custom-badge':d.tag==='planned'?'source-planned':'source-badge';
+      const srcLabel=d.custom?'My add':d.tag==='planned'?'Planned':d.tag==='or'?'OR/EM':d.tag==='rec'?'Rec':'—';
+      const imdbHref=`https://www.imdb.com/find/?q=${encodeURIComponent(d.title)}`;
+      const delBtn=d.custom?`<button class="del-btn" onclick="event.stopPropagation();window.deleteCustom(${d.rank})">✕</button>`:'';
+      html+=`<div class="item${done?' done':''}" onclick="window.toggleItem(${d.rank})">
+        <div class="item-num">${counter++}</div>
+        <div class="item-main">
+          <div class="item-check"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#0d0d0f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="item-info">
+            <div class="item-title">${d.title}</div>
+            <div class="item-sub">${d.sub||''}${d.sub&&d.genre?' · ':''}<span style="color:var(--faint)">${d.genre||''}</span></div>
+          </div>
+        </div>
+        <div class="item-meta">
+          ${fBadge}${orBadge}
+          <span class="${srcClass}">${srcLabel}</span>
+          <span class="type-badge type-${d.type}">${d.type}</span>
+          <a class="imdb-btn" href="${imdbHref}" target="_blank" rel="noopener" onclick="event.stopPropagation()">IMDb ↗</a>
+          ${delBtn}
+          <span class="duration">${fmtDur(d.mins,d.eps)}</span>
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  list.innerHTML=html;
+  updateStats(visible);
+}
+
+function updateStats(visible){
+  if(!visible)visible=[...allData()].sort((a,b)=>a.mins-b.mins).filter(matchesFilter);
+  const done=visible.filter(d=>doneSet.has(d.rank));
+  const rem=visible.filter(d=>!doneSet.has(d.rank)).reduce((a,b)=>a+b.mins,0);
+  document.getElementById('stat-total').textContent=visible.length;
+  document.getElementById('stat-done').textContent=done.length;
+  document.getElementById('stat-hours').textContent=Math.round(rem/60).toLocaleString();
+  document.getElementById('footer-time').textContent=fmtHours(rem);
+  const pct=visible.length?(done.length/visible.length*100):0;
+  document.getElementById('prog-fill').style.width=pct.toFixed(1)+'%';
+  document.getElementById('prog-text').textContent=`${done.length} / ${visible.length}`;
+}
+
+// ── Actions — exposed to window for onclick handlers ──────────
+window.toggleItem=function(rank){
+  doneSet.has(rank)?doneSet.delete(rank):doneSet.add(rank);
+  saveToFirestore();render();
+};
+
+window.filterList=function(f,btn){
+  activeFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+};
+
+window.deleteCustom=function(rank){
+  customItems=customItems.filter(c=>c.rank!==rank);
+  doneSet.delete(rank);
+  saveToFirestore();render();
+};
+
+// ── Add title modal ───────────────────────────────────────────
+window.openModal=function(){
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('f-title').focus();
+};
+window.closeModal=function(){
+  document.getElementById('modal').classList.remove('open');
+  ['f-title','f-genre','f-sub','f-mins','f-eps'].forEach(id=>{document.getElementById(id).value='';});
+};
+
+// Show/hide episodes field based on type
+document.getElementById('f-type').addEventListener('change',function(){
+  const isShow=this.value==='show'||this.value==='anime';
+  document.getElementById('f-eps-wrap').style.display=isShow?'block':'none';
+  document.getElementById('f-dur-label').textContent=isShow?'Avg episode runtime (mins) *':'Runtime (minutes) *';
+  document.getElementById('f-dur-note').textContent=isShow?'Per episode, e.g. 24 for anime, 42 for drama':'Total movie runtime in minutes';
+});
+
+window.submitAdd=function(){
+  const title=document.getElementById('f-title').value.trim();
+  const type=document.getElementById('f-type').value;
+  const tag=document.getElementById('f-tag').value;
+  const genre=document.getElementById('f-genre').value.trim();
+  const sub=document.getElementById('f-sub').value.trim();
+  const minsRaw=parseInt(document.getElementById('f-mins').value)||0;
+  const eps=parseInt(document.getElementById('f-eps').value)||null;
+  if(!title||!minsRaw){alert('Title and runtime are required.');return;}
+  const totalMins=(type==='show'||type==='anime')&&eps ? minsRaw*eps : minsRaw;
+  const maxRank=Math.max(...[...baseData,...customItems].map(d=>d.rank),CUSTOM_RANK_START-1);
+  const newItem={
+    rank:maxRank+1,title,sub,type,genre,mins:totalMins,tag,
+    or:tag==='or',custom:true,
+    ...(eps?{eps}:{}),
+  };
+  customItems.push(newItem);
+  saveToFirestore();
+  window.closeModal();
+  render();
+};
+
+// ── Boot ──────────────────────────────────────────────────────
+(async()=>{
+  const saved=await loadFromFirestore();
+  doneSet=saved.done;
+  customItems=saved.custom;
+  render();
+})();
+</script>
+</body>
+</html>
