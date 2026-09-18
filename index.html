@@ -132,7 +132,10 @@ svg{display:block;flex-shrink:0}
 .rep-d{font-size:var(--fs-xs);color:var(--muted);font-family:var(--mono);margin-top:2px}
 .rep-d ins{color:var(--running);text-decoration:none}
 .rep-d del{color:var(--danger);opacity:.8}
-.rep-sum{font-size:var(--fs-xs);color:var(--muted);margin-bottom:var(--sp-2)}
+.rep-sum{font-size:var(--fs-xs);color:var(--muted);margin-bottom:var(--sp-2);line-height:1.6}
+.rep-sum strong{color:var(--gold)}
+.rep-risk{background:rgba(232,115,107,.05)}
+.rep-flag{font-family:var(--mono);font-size:9.5px;color:var(--danger);border:1px solid rgba(232,115,107,.3);border-radius:4px;padding:1px 5px;margin-left:var(--sp-2);white-space:nowrap}
 .mo-reset{margin-top:var(--sp-3);width:100%;min-height:var(--tap-min);padding:var(--sp-2);border-radius:var(--radius);background:transparent;border:1px dashed var(--border3);color:var(--muted);font-size:var(--fs-xs);cursor:pointer}
 .mo-reset:hover{color:var(--gold);border-color:var(--gold2)}
 .pw{display:flex;align-items:center;gap:var(--sp-2)}
@@ -188,7 +191,13 @@ svg{display:block;flex-shrink:0}
 
 /* episode stepper -- 28px targets (was 15px, below the WCAG 2.2 AA 24px floor) */
 .ep-t{display:inline-flex;align-items:center;gap:var(--sp-1);padding:2px;border-radius:6px;background:rgba(106,173,224,.10);border:1px solid rgba(106,173,224,.22)}
-.ep-n{font-family:var(--mono);font-size:var(--fs-xs);color:var(--watch);min-width:44px;text-align:center;font-variant-numeric:tabular-nums}
+.ep-n{font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;min-width:60px;font-variant-numeric:tabular-nums}
+.ep-pos{font-size:var(--fs-xs);color:var(--watch);font-weight:500;letter-spacing:.02em}
+.ep-sub{font-size:9.5px;color:var(--muted)}
+/* one segment per season, widths proportional to episode counts */
+.sstrip{display:flex;gap:2px;width:100%;height:3px;margin-top:3px}
+.sseg{background:rgba(106,173,224,.18);border-radius:1px;overflow:hidden;display:block}
+.sseg>span{display:block;height:100%;background:var(--watch);border-radius:1px;transition:width var(--dur) var(--ease)}
 .epb{width:var(--tap-min);height:var(--tap-min);border-radius:5px;border:none;background:transparent;color:var(--watch);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--dur-fast) var(--ease)}
 .epb:hover:not([disabled]){background:rgba(106,173,224,.18)}
 .epb[disabled]{opacity:.35;cursor:not-allowed}
@@ -196,7 +205,7 @@ svg{display:block;flex-shrink:0}
 
 /* action slot: reserves its width so swapping Start ↔ stepper ↔ Again
    never shifts the badges beside it */
-.islot{display:inline-flex;justify-content:flex-end;min-width:104px;flex-shrink:0}
+.islot{display:inline-flex;flex-direction:column;align-items:flex-end;justify-content:center;min-width:128px;flex-shrink:0}
 .pbtn{display:inline-flex;align-items:center;gap:var(--sp-1);min-height:var(--tap-min);padding:0 var(--sp-3);border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:var(--fs-2xs);font-family:var(--mono);letter-spacing:.04em;cursor:pointer;opacity:0;transition:opacity var(--dur) var(--ease),background var(--dur) var(--ease),color var(--dur) var(--ease),border-color var(--dur) var(--ease)}
 .pbtn .ico{width:12px;height:12px}
 /* stays out of the way until you reach for it, but never hides from keyboard or touch */
@@ -546,7 +555,7 @@ body.locked>*:not(#lockScreen):not(.toasts){display:none}
       </div>
     </div>
     <div class="field"><label for="mSu">Extra info</label><input type="text" id="mSu" placeholder="Netflix &middot; 2024 &middot; Cast"></div>
-    <input type="hidden" id="mImdb"><input type="hidden" id="mEdit" value="">
+    <input type="hidden" id="mImdb"><input type="hidden" id="mEdit" value=""><input type="hidden" id="mSeasons">
     <div class="mbtn">
       <button type="button" class="btn-x" id="mCancel">Cancel</button>
       <button type="submit" class="btn-go">Save</button>
@@ -863,6 +872,20 @@ function fillGenres(){
 const tiers=[{l:'Under 2h',x:120},{l:'2–8 hours',x:480},{l:'8–20 hours',x:1200},{l:'20–50 hours',x:3000},{l:'50+ hours',x:1/0}];
 const announce=m=>{$('live').textContent=m};
 
+/* One segment per season, filled by how far through it you are. Decorative and
+   aria-hidden: the text above already carries the position, and 9 segments in
+   ~100px would be well under the 24px minimum target size if they were clickable. */
+function seasonStrip(d,watched){
+  const c=d.seasons;
+  if(!Array.isArray(c)||c.length<2||c.reduce((a,b)=>a+b,0)!==d.eps)return '';
+  let done=watched;
+  const segs=c.map(n=>{
+    const f=Math.max(0,Math.min(1,done/n));done-=n;
+    return `<span class="sseg" style="flex:${n}"><span style="width:${(f*100).toFixed(1)}%"></span></span>`;
+  }).join('');
+  return `<span class="sstrip" aria-hidden="true" title="${c.length} seasons">${segs}</span>`;
+}
+
 /* The action slot. Status and progress are separate questions, so they get
    separate controls: the tick always answers "have I finished this", this slot
    always answers "am I on this right now". Neither cycles. */
@@ -870,11 +893,18 @@ function slotHTML(d){
   const s=gs(d.rank);
   if(s.s===1&&d.eps){                                  // watching a series → stepper
     const cur=s.ep||0,last=cur>=d.eps-1;
+    const loc=epLoc(cur,d.seasons,d.eps);
+    // position first, raw count second — "S7·E12" is the answer to "where am I"
+    const head=loc?locLabel(loc):`${cur}/${d.eps}`;
+    const sub=loc?`${cur}/${d.eps}`:`episode${cur===1?'':'s'}`;
+    const srLabel=loc
+      ? (loc.started?`Season ${loc.season}, episode ${loc.episode} of ${loc.seasonTotal}. ${cur} of ${d.eps} episodes overall.`:`Not started. ${d.eps} episodes.`)
+      : `${cur} of ${d.eps} episodes watched`;
     return `<span class="ep-t">
       <button class="epb" data-act="epD" data-r="${d.rank}" aria-label="One less episode of ${esc(d.title)}"${cur<=0?' disabled':''}>${icon('minus')}</button>
-      <span class="ep-n" aria-label="${cur} of ${d.eps} episodes watched">${cur}/${d.eps}</span>
+      <span class="ep-n"><span class="ep-pos">${head}</span><span class="ep-sub">${sub}</span><span class="vh">${srLabel}</span></span>
       <button class="epb${last?' epb-fin':''}" data-act="epI" data-r="${d.rank}" aria-label="${last?`Watch the final episode of ${esc(d.title)} and mark it done`:`One more episode of ${esc(d.title)}`}"${cur>=d.eps?' disabled':''}>${icon('plus')}</button>
-    </span>`;
+    </span>${seasonStrip(d,cur)}`;
   }
   if(s.s===1)return `<span class="slot-now">Watching now</span>`;   // a movie in progress
   if(s.s===2)return `<button class="pbtn p-again" data-act="watch" data-r="${d.rank}" aria-label="Watch ${esc(d.title)} again">${icon('undo')}<span>Again</span></button>`;
@@ -1161,8 +1191,11 @@ async function seriesDetail(id,totalSeasons){
       fetch(`https://www.omdbapi.com/?apikey=${OK}&i=${id}&Season=${i+1}`)
         .then(r=>r.json()).catch(()=>null))
   );
-  let eps=0;
-  seasons.forEach(s=>{if(s&&s.Response==='True'&&Array.isArray(s.Episodes))eps+=s.Episodes.length});
+  // keep the per-season shape, not just the sum — "137/201" tells you nothing,
+  // "S7·E12" does, and that needs to know where each season starts and ends
+  const counts=[];
+  seasons.forEach(s=>{if(s&&s.Response==='True'&&Array.isArray(s.Episodes)&&s.Episodes.length)counts.push(s.Episodes.length)});
+  const eps=counts.reduce((a,b)=>a+b,0);
   // per-episode runtime from the first real episode we can find
   let epRuntime=0;
   const first=seasons.find(s=>s&&Array.isArray(s.Episodes)&&s.Episodes.length);
@@ -1172,8 +1205,21 @@ async function seriesDetail(id,totalSeasons){
       epRuntime=parseInt(ep.Runtime)||0;
     }catch(e){console.warn('episode runtime lookup failed',e)}
   }
-  return{eps,epRuntime,seasons:n};
+  return{eps,epRuntime,seasons:n,counts};
 }
+
+/* Maps a flat "episodes watched" count onto season/episode coordinates.
+   Falls back to null whenever the breakdown doesn't add up, so a stale or
+   hand-edited episode count can never show a wrong position. */
+function epLoc(watched,counts,total){
+  if(!Array.isArray(counts)||!counts.length)return null;
+  if(counts.reduce((a,b)=>a+b,0)!==total)return null;
+  if(watched<=0)return{season:1,episode:0,seasonTotal:counts[0],started:false};
+  let rem=watched,s=0;
+  while(s<counts.length-1&&rem>counts[s]){rem-=counts[s];s++}
+  return{season:s+1,episode:rem,seasonTotal:counts[s],started:true};
+}
+const locLabel=l=>l.started?`S${l.season}·E${l.episode}`:'Not started';
 
 async function oSel(id){
   try{
@@ -1195,8 +1241,9 @@ async function oSel(id){
     const note=$('mDN');const prev=note.textContent;
     note.textContent='Looking up episodes…';$('mEp').placeholder='…';
     try{
-      const{eps,epRuntime,seasons}=await seriesDetail(d.imdbID,d.totalSeasons);
+      const{eps,epRuntime,seasons,counts}=await seriesDetail(d.imdbID,d.totalSeasons);
       if(eps)$('mEp').value=eps;
+      if(counts&&counts.length)$('mSeasons').value=JSON.stringify(counts);
       // a series-level runtime under 5 min is OMDb noise, not a real episode length
       if(epRuntime)$('mMi').value=epRuntime;
       else if(rt<=5)$('mMi').value='';
@@ -1257,7 +1304,7 @@ W.resetOverride=async()=>{
 };
 W.closeM=()=>{
   closeDlg('modal');
-  ['mS','mTi','mGe','mSu','mMi','mEp','mImdb','mEdit'].forEach(id=>$(id).value='');
+  ['mS','mTi','mGe','mSu','mMi','mEp','mImdb','mEdit','mSeasons'].forEach(id=>$(id).value='');
   $('sr').innerHTML='';$('mTy').value='movie';$('mTg').value='personal';
   $('mS').setAttribute('aria-expanded','false');clearErr();W.tyC();
 };
@@ -1270,6 +1317,9 @@ W.submit=async()=>{
         genre=$('mGe').value.trim(),sub=$('mSu').value.trim(),
         mR=parseInt($('mMi').value)||0,eps=parseInt($('mEp').value)||null,
         imdbID=$('mImdb').value.trim();
+  let seasonsArr=null;
+  try{const p=JSON.parse($('mSeasons').value||'null');
+      if(Array.isArray(p)&&p.length&&p.reduce((a,b)=>a+b,0)===eps)seasonsArr=p}catch(e){}
 
   // inline errors next to the field, not a blocking alert()
   let bad=null;
@@ -1289,16 +1339,16 @@ W.submit=async()=>{
     const idx=CI.findIndex(c=>c.rank===editRank);
     if(idx>=0){
       // null, not undefined — Firestore rejects undefined and the whole save fails
-      CI[idx]={...CI[idx],title,sub,type,genre,mins:tot,tag,or:tag==='or',eps:eps||null};
+      CI[idx]={...CI[idx],title,sub,type,genre,mins:tot,tag,or:tag==='or',eps:eps||null,seasons:seasonsArr||CI[idx].seasons||null};
       if(imdbID)CA[editRank]={...CA[editRank],id:imdbID};
     }else if(isBuiltIn(editRank)){
       // seeded title: record an override rather than mutating B[]
-      OV[editRank]={title,sub,type,genre,mins:tot,tag,or:tag==='or',eps:eps||null};
+      OV[editRank]={title,sub,type,genre,mins:tot,tag,or:tag==='or',eps:eps||null,seasons:seasonsArr||null};
       if(imdbID)CA[editRank]={...CA[editRank],id:imdbID};
     }
   }else{
     const mx=Math.max(...all().map(d=>d.rank),999);
-    const ni={rank:mx+1,title,sub,type,genre,mins:tot,tag,or:tag==='or',custom:true,...(eps?{eps}:{})};
+    const ni={rank:mx+1,title,sub,type,genre,mins:tot,tag,or:tag==='or',custom:true,...(eps?{eps}:{}),...(seasonsArr?{seasons:seasonsArr}:{})};
     CI.push(ni);if(imdbID)CA[ni.rank]={id:imdbID};
   }
   save();W.closeM();fillGenres();render();
@@ -1310,11 +1360,13 @@ W.submit=async()=>{
    series-level Runtime is unreliable), fetches the real numbers, and shows a
    review list. Nothing is written until the user applies it. */
 const IMPLAUSIBLE=5;                       // minutes; below this a runtime is noise
+const hasSeasons=d=>Array.isArray(d.seasons)&&d.seasons.length>0&&d.seasons.reduce((a,b)=>a+b,0)===d.eps;
 function needsRepair(d){
   if(d.type!=='show'&&d.type!=='anime')return false;
   if(!d.eps)return true;                                  // no episode count
   const per=d.eps?d.mins/d.eps:d.mins;
-  return !d.mins||per<IMPLAUSIBLE;                        // nonsense per-episode length
+  if(!d.mins||per<IMPLAUSIBLE)return true;                // nonsense per-episode length
+  return !hasSeasons(d);                                  // no season breakdown → can't show S·E
 }
 async function resolveId(d){
   if(CA[d.rank]&&CA[d.rank].id)return CA[d.rank].id;
@@ -1326,32 +1378,45 @@ async function resolveId(d){
 W.repairShows=async()=>{
   const cands=all().filter(needsRepair);
   if(!cands.length)return toast('Every show already has sensible episode data.','ok');
-  const t=toast(`Checking ${cands.length} show${cands.length>1?'s':''}…`,'info');
-  const found=[];
+  let t=toast(`Checking ${cands.length} show${cands.length>1?'s':''}… 0/${cands.length}`,'info','', 'scan');
+  const found=[];let n=0;
   for(const d of cands){
+    n++;
+    if(n%5===0)t=toast(`Checking shows… ${n}/${cands.length}`,'info','', 'scan');
     const id=await resolveId(d);
     if(!id)continue;
     try{
       const det=await fetch(`https://www.omdbapi.com/?apikey=${OK}&i=${id}`).then(r=>r.json());
-      const{eps,epRuntime}=await seriesDetail(id,det.totalSeasons);
+      const{eps,epRuntime,counts}=await seriesDetail(id,det.totalSeasons);
       if(!eps)continue;
       const per=epRuntime||(d.eps?Math.round(d.mins/d.eps):d.mins)||0;
       if(!per)continue;
       const mins=eps*per;
-      if(eps===d.eps&&mins===d.mins)continue;              // nothing to change
-      found.push({rank:d.rank,title:d.title,id,eps,per,mins,curEps:d.eps||null,curMins:d.mins});
+      const sameSeasons=hasSeasons(d)&&d.seasons.join()===counts.join();
+      if(eps===d.eps&&mins===d.mins&&sameSeasons)continue;  // nothing to change
+      // "safe" = adds the season breakdown without touching a count you curated.
+      // If OMDb disagrees with a plausible existing count, that's a judgement
+      // call, so it arrives unchecked rather than silently overwriting you.
+      const wasBroken=!d.eps||!d.mins||(d.mins/d.eps)<IMPLAUSIBLE;
+      const safe=wasBroken||(eps===d.eps&&mins===d.mins);
+      found.push({rank:d.rank,title:d.title,id,eps,per,mins,counts,safe,
+                  curEps:d.eps||null,curMins:d.mins,curSeasons:hasSeasons(d)?d.seasons.length:0});
     }catch(e){console.warn('repair lookup failed for',d.title,e)}
   }
-  t.remove();
+  document.querySelectorAll('[data-group="scan"]').forEach(x=>x.remove());
   if(!found.length)return toast('Nothing could be improved automatically.','info');
+  // safe additions first; anything that would overwrite your own count sits below
+  found.sort((a,b)=>(b.safe?1:0)-(a.safe?1:0));
   repairList=found;
-  $('repSum').textContent=`${found.length} show${found.length>1?'s':''} can be corrected. Review and uncheck anything you want to keep.`;
+  const nSafe=found.filter(f=>f.safe).length,nRisk=found.length-nSafe;
+  $('repSum').innerHTML=`${nSafe} show${nSafe===1?'':'s'} can be filled in safely.`+
+    (nRisk?` <strong>${nRisk}</strong> would also change an episode count you already set — those are unticked; tick one only if you want OMDb's number instead of yours.`:'');
   $('repList').innerHTML=found.map((f,i)=>`
-    <label class="rep-row">
-      <input type="checkbox" checked data-i="${i}">
+    <label class="rep-row${f.safe?'':' rep-risk'}">
+      <input type="checkbox" ${f.safe?'checked':''} data-i="${i}">
       <span class="rep-b">
-        <span class="rep-t">${esc(f.title)}</span>
-        <span class="rep-d"><del>${f.curEps?f.curEps+'ep · ':''}${fD(f.curMins,f.curEps||undefined)}</del> → <ins>${f.eps}ep × ${f.per}m = ${fD(f.mins,f.eps)}</ins></span>
+        <span class="rep-t">${esc(f.title)}${f.safe?'':' <span class="rep-flag">count changes</span>'}</span>
+        <span class="rep-d"><del>${f.curEps?f.curEps+'ep · ':''}${fD(f.curMins,f.curEps||undefined)}${f.curSeasons?` · ${f.curSeasons} seasons`:''}</del> → <ins>${f.eps}ep × ${f.per}m${f.counts&&f.counts.length>1?` · ${f.counts.length} seasons`:''} = ${fD(f.mins,f.eps)}</ins></span>
       </span>
     </label>`).join('');
   openDlg('repDlg',$('repApply'));
@@ -1361,9 +1426,10 @@ W.applyRepairs=async()=>{
   const picked=[...$('repList').querySelectorAll('input:checked')].map(c=>repairList[+c.dataset.i]);
   if(!picked.length)return closeDlg('repDlg');
   picked.forEach(f=>{
+    const patch={eps:f.eps,mins:f.mins,...(f.counts&&f.counts.length?{seasons:f.counts}:{})};
     const idx=CI.findIndex(c=>c.rank===f.rank);
-    if(idx>=0)CI[idx]={...CI[idx],eps:f.eps,mins:f.mins};
-    else if(isBuiltIn(f.rank))OV[f.rank]={...(OV[f.rank]||{}),eps:f.eps,mins:f.mins};
+    if(idx>=0)CI[idx]={...CI[idx],...patch};
+    else if(isBuiltIn(f.rank))OV[f.rank]={...(OV[f.rank]||{}),...patch};
     if(f.id)CA[f.rank]={...CA[f.rank],id:f.id};
   });
   closeDlg('repDlg');
