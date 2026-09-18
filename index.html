@@ -117,22 +117,31 @@ body.locked>*:not(#lockScreen){display:none}
   <h2>Enter Passcode</h2>
   <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="lockInput" autocomplete="off">
   <div class="lock-err" id="lockErr"></div>
+  <button class="btn-go" id="lockBtn" style="margin-top:10px">Unlock</button>
 </div></div>
 <script>
 (function(){
   const LOCK_HASH='ed946f65d2c785d90e827c5ffd879ce3b49c68d4c88013074176a7e73bc58bcf';
-  async function sha256(s){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+  async function sha256(s){
+    if(!(window.crypto&&crypto.subtle))throw new Error('no-subtlecrypto');
+    const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
+    return[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('')
+  }
   function unlock(){document.body.classList.remove('locked')}
   if(localStorage.getItem('wlUnlocked')==='1'){unlock();return}
-  const li=document.getElementById('lockInput'),err=document.getElementById('lockErr');
+  const li=document.getElementById('lockInput'),err=document.getElementById('lockErr'),btn=document.getElementById('lockBtn');
   li.focus();
-  li.addEventListener('input',()=>{li.value=li.value.replace(/\D/g,'').slice(0,4);err.textContent=''});
-  li.addEventListener('keydown',async e=>{
-    if(e.key!=='Enter'||li.value.length!==4)return;
-    const h=await sha256(li.value);
-    if(h===LOCK_HASH){localStorage.setItem('wlUnlocked','1');unlock()}
-    else{err.textContent='Incorrect code';li.value='';li.focus()}
-  });
+  async function tryUnlock(){
+    if(li.value.length!==4)return;
+    try{
+      const h=await sha256(li.value);
+      if(h===LOCK_HASH){localStorage.setItem('wlUnlocked','1');unlock()}
+      else{err.textContent='Incorrect code';li.value='';li.focus()}
+    }catch(e){err.textContent='Browser blocked secure check — try https or a different browser';console.error(e)}
+  }
+  li.addEventListener('input',()=>{li.value=li.value.replace(/\D/g,'').slice(0,4);err.textContent='';if(li.value.length===4)tryUnlock()});
+  li.addEventListener('keydown',e=>{if(e.key==='Enter')tryUnlock()});
+  btn.addEventListener('click',tryUnlock);
 })();
 </script>
 <div class="hero"><div class="hero-top"><div>
