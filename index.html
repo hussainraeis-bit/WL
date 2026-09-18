@@ -99,9 +99,42 @@ body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xm
 .footer{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(180deg,transparent,var(--bg) 40%);padding:1.5rem 3rem .7rem;display:flex;align-items:flex-end;justify-content:space-between;font-size:10px;color:var(--muted);pointer-events:none}.footer *{pointer-events:auto}.footer strong{color:var(--gold);font-family:var(--mono);font-weight:500}
 .legend{display:flex;gap:10px;font-family:var(--mono);font-size:9px}.legend span{display:flex;align-items:center;gap:3px}.ld{width:6px;height:6px;border-radius:2px;display:inline-block}
 @media(max-width:640px){.hero{padding:1.5rem 1rem 1.25rem}.hero h1{font-size:2.2rem}.ctrl,.list,.sv,.footer{padding-left:1rem;padding-right:1rem}.stats-row{gap:.75rem}.stat-n{font-size:1.6rem}.item{grid-template-columns:22px 1fr auto;padding:8px 6px}.b-src,.b-plan,.b-or,.b-cust,.badge.b-run,.badge.b-end{display:none}.filters{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}.filters::-webkit-scrollbar{display:none}.sv-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* Passcode lock */
+body.locked>*:not(#lockScreen){display:none}
+.lock{position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:1rem}
+.lock-box{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:2rem 1.75rem;width:100%;max-width:300px;text-align:center;box-shadow:0 32px 64px rgba(0,0,0,.5)}
+.lock-icon{font-size:2rem;margin-bottom:.5rem}
+.lock-box h2{font-family:var(--serif);font-size:1.3rem;font-weight:400;margin-bottom:1.25rem;color:var(--text)}
+.lock-box input{width:100%;padding:12px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:1.4rem;text-align:center;letter-spacing:.5em;outline:none;box-sizing:border-box}
+.lock-box input:focus{border-color:var(--gold2)}
+.lock-err{color:var(--movie);font-size:11px;margin-top:8px;height:14px;font-family:var(--mono)}
 </style>
 </head>
-<body>
+<body class="locked">
+<div class="lock" id="lockScreen"><div class="lock-box">
+  <div class="lock-icon">🔒</div>
+  <h2>Enter Passcode</h2>
+  <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="lockInput" autocomplete="off">
+  <div class="lock-err" id="lockErr"></div>
+</div></div>
+<script>
+(function(){
+  const LOCK_HASH='ed946f65d2c785d90e827c5ffd879ce3b49c68d4c88013074176a7e73bc58bcf';
+  async function sha256(s){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+  function unlock(){document.body.classList.remove('locked')}
+  if(localStorage.getItem('wlUnlocked')==='1'){unlock();return}
+  const li=document.getElementById('lockInput'),err=document.getElementById('lockErr');
+  li.focus();
+  li.addEventListener('input',()=>{li.value=li.value.replace(/\D/g,'').slice(0,4);err.textContent=''});
+  li.addEventListener('keydown',async e=>{
+    if(e.key!=='Enter'||li.value.length!==4)return;
+    const h=await sha256(li.value);
+    if(h===LOCK_HASH){localStorage.setItem('wlUnlocked','1');unlock()}
+    else{err.textContent='Incorrect code';li.value='';li.focus()}
+  });
+})();
+</script>
 <div class="hero"><div class="hero-top"><div>
   <h1>The <em>master</em> watchlist</h1>
   <p class="hero-sub">Click to cycle status · Track episodes · OMDB search when adding</p>
