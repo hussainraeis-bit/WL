@@ -194,6 +194,20 @@ svg{display:block;flex-shrink:0}
 .epb[disabled]{opacity:.35;cursor:not-allowed}
 .epb .ico{width:13px;height:13px;stroke-width:2.25}
 
+/* action slot: reserves its width so swapping Start ↔ stepper ↔ Again
+   never shifts the badges beside it */
+.islot{display:inline-flex;justify-content:flex-end;min-width:104px;flex-shrink:0}
+.pbtn{display:inline-flex;align-items:center;gap:var(--sp-1);min-height:var(--tap-min);padding:0 var(--sp-3);border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:var(--fs-2xs);font-family:var(--mono);letter-spacing:.04em;cursor:pointer;opacity:0;transition:opacity var(--dur) var(--ease),background var(--dur) var(--ease),color var(--dur) var(--ease),border-color var(--dur) var(--ease)}
+.pbtn .ico{width:12px;height:12px}
+/* stays out of the way until you reach for it, but never hides from keyboard or touch */
+.item:hover .pbtn,.item:focus-within .pbtn,.pbtn:focus-visible{opacity:1}
+@media(hover:none){.pbtn{opacity:1}}
+.pbtn:hover{background:rgba(106,173,224,.14);color:var(--watch);border-color:rgba(106,173,224,.35)}
+.p-again:hover{background:var(--gg);color:var(--gold);border-color:var(--border3)}
+.slot-now{font-family:var(--mono);font-size:var(--fs-2xs);color:var(--watch);letter-spacing:.04em;padding:0 var(--sp-2)}
+/* the final episode reads as the finishing move */
+.epb-fin{background:var(--gg);color:var(--gold)}
+.epb-fin:hover:not([disabled]){background:var(--gg2)}
 .badge{font-size:var(--fs-2xs);padding:3px var(--sp-2);border-radius:5px;font-family:var(--mono);letter-spacing:.03em;font-weight:500;white-space:nowrap;line-height:1.4}
 .b-movie{background:rgba(216,128,96,.10);color:var(--movie);border:1px solid rgba(216,128,96,.22)}
 .b-anime{background:rgba(168,152,208,.10);color:var(--anime);border:1px solid rgba(168,152,208,.22)}
@@ -426,7 +440,7 @@ body.locked>*:not(#lockScreen):not(.toasts){display:none}
   <div class="hero-top">
     <div>
       <h1>The <em>master</em> watchlist</h1>
-      <p class="hero-sub">Click a row to cycle plan &rarr; watching &rarr; done. Track episodes, search OMDb when adding.</p>
+      <p class="hero-sub">Tick a row to mark it finished &mdash; from any state, one click. Hit Start to track episodes; the last one completes the show.</p>
       <div class="sync" id="sync" role="status" aria-live="polite">
         <svg class="ico" aria-hidden="true"><use href="#i-cloud"/></svg><span id="syncTxt">Connecting&hellip;</span>
       </div>
@@ -611,8 +625,12 @@ const icon=(n,cls='ico')=>`<svg class="${cls}" aria-hidden="true"><use href="#i-
 const prefersReduced=()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- toasts: replace alert(), which blocks the page and cannot be styled ---------- */
-function toast(msg,kind='info',action){
+function toast(msg,kind='info',action,group){
   const wrap=$('toasts'),t=document.createElement('div');
+  // only one undoable status toast at a time — a stack of identical "Undo"
+  // buttons gives you no way to tell which change you'd be reverting
+  if(group)wrap.querySelectorAll(`[data-group="${group}"]`).forEach(o=>o.remove());
+  if(group)t.dataset.group=group;
   t.className='toast '+kind;
   t.innerHTML=`${icon(kind==='ok'?'ok':kind==='err'?'alert':'info')}<span class="toast-msg">${esc(msg)}</span>`;
   if(action){
@@ -812,6 +830,13 @@ const gs=r=>ST[r]||{s:0,ep:0};
 const fD=(m,e)=>{const h=Math.floor(m/60),r=m%60;return e?`${e}ep · ${h}h${r?r+'m':''}`:`${h}h${r}m`};
 const fH=m=>m>1440?`${(m/1440).toFixed(1)}d`:`${Math.floor(m/60)}h${m%60}m`;
 const SLAB=['Plan','Watching','Done'];
+/* Says what the tick will DO, not just what the state is — so a screen reader
+   user knows the outcome before committing to the click. */
+function statusLine(d){
+  const s=gs(d.rank);
+  const where=s.s===1&&d.eps?`Watching, ${s.ep||0} of ${d.eps} episodes.`:`${SLAB[s.s]}.`;
+  return `${where} ${s.s===2?'Activate to mark as not finished.':'Activate to mark as finished.'} ${fD(d.mins,d.eps)}.`;
+}
 /* seeded titles use "Crime / Thriller"; OMDb-filled ones use "Animation, Action, Adventure".
    split on both, or comma lists collapse into one bogus genre. */
 const genresOf=d=>(d.genre||'').split(/\s*[,/]\s*/).map(g=>g.trim()).filter(Boolean);
@@ -838,6 +863,24 @@ function fillGenres(){
 const tiers=[{l:'Under 2h',x:120},{l:'2–8 hours',x:480},{l:'8–20 hours',x:1200},{l:'20–50 hours',x:3000},{l:'50+ hours',x:1/0}];
 const announce=m=>{$('live').textContent=m};
 
+/* The action slot. Status and progress are separate questions, so they get
+   separate controls: the tick always answers "have I finished this", this slot
+   always answers "am I on this right now". Neither cycles. */
+function slotHTML(d){
+  const s=gs(d.rank);
+  if(s.s===1&&d.eps){                                  // watching a series → stepper
+    const cur=s.ep||0,last=cur>=d.eps-1;
+    return `<span class="ep-t">
+      <button class="epb" data-act="epD" data-r="${d.rank}" aria-label="One less episode of ${esc(d.title)}"${cur<=0?' disabled':''}>${icon('minus')}</button>
+      <span class="ep-n" aria-label="${cur} of ${d.eps} episodes watched">${cur}/${d.eps}</span>
+      <button class="epb${last?' epb-fin':''}" data-act="epI" data-r="${d.rank}" aria-label="${last?`Watch the final episode of ${esc(d.title)} and mark it done`:`One more episode of ${esc(d.title)}`}"${cur>=d.eps?' disabled':''}>${icon('plus')}</button>
+    </span>`;
+  }
+  if(s.s===1)return `<span class="slot-now">Watching now</span>`;   // a movie in progress
+  if(s.s===2)return `<button class="pbtn p-again" data-act="watch" data-r="${d.rank}" aria-label="Watch ${esc(d.title)} again">${icon('undo')}<span>Again</span></button>`;
+  return `<button class="pbtn" data-act="watch" data-r="${d.rank}" aria-label="Start watching ${esc(d.title)}">${icon('play')}<span>Start</span></button>`;
+}
+
 /* ---------------- row markup ---------------- */
 function rowHTML(d,n,delay){
   const s=gs(d.rank),dn=s.s===2,wt=s.s===1,sc=dn?' s-d':wt?' s-w':'',c=CA[d.rank]||{};
@@ -853,16 +896,7 @@ function rowHTML(d,n,delay){
   if(c.status==='running')extra+='<span class="badge b-run">Running</span>';
   else if(c.status==='ended')extra+='<span class="badge b-end">Ended</span>';
 
-  // episode stepper — 28px targets, disabled at bounds
-  let epH='';
-  if(wt&&d.eps){
-    const cur=s.ep||0;
-    epH=`<span class="ep-t">
-      <button class="epb" data-act="epD" data-r="${d.rank}" aria-label="One less episode of ${esc(d.title)}"${cur<=0?' disabled':''}>${icon('minus')}</button>
-      <span class="ep-n" aria-label="${cur} of ${d.eps} episodes watched">${cur}/${d.eps}</span>
-      <button class="epb" data-act="epI" data-r="${d.rank}" aria-label="One more episode of ${esc(d.title)}"${cur>=d.eps?' disabled':''}>${icon('plus')}</button>
-    </span>`;
-  }
+  const epH=slotHTML(d);
   // every title is editable and deletable now, seeded ones included
   const editB=`<button class="iact a-edit" data-act="edit" data-r="${d.rank}" aria-label="Edit ${esc(d.title)}">${icon('pencil')}</button>`;
   const delB=`<button class="iact a-del" data-act="del" data-r="${d.rank}" aria-label="Delete ${esc(d.title)}">${icon('trash')}</button>`;
@@ -870,15 +904,15 @@ function rowHTML(d,n,delay){
   const srcB=sL?`<span class="badge ${sC}">${sL}</span>`:'';
   return `<div class="item${sc}" id="i-${d.rank}" role="listitem" style="animation-delay:${delay}s">
     <span class="inum" aria-hidden="true">${n}</span>
-    <button class="itog" data-act="tog" data-r="${d.rank}" data-eps="${d.eps?1:0}">
+    <button class="itog" data-act="tog" data-r="${d.rank}" aria-pressed="${dn}">
       <span class="ichk" aria-hidden="true">${icon('check','ico i-check')}${icon('play','ico i-play')}</span>
       <span class="iinfo">
         <span class="it">${esc(d.title)}</span>
         <span class="isub">${esc(d.sub||'')}${d.genre?' · '+esc(d.genre):''}</span>
       </span>
-      <span class="vh" data-st>Status: ${SLAB[s.s]}. Runtime ${fD(d.mins,d.eps)}.</span>
+      <span class="vh" data-st>${statusLine(d)}</span>
     </button>
-    <div class="imeta">${epH}${extra}${srcB}<span class="badge ${tC}">${d.type}</span><a class="iact a-imdb" href="${href}" target="_blank" rel="noopener" aria-label="${esc(d.title)} on IMDb, opens in a new tab">${icon('external')}</a>${editB}${delB}<span class="dur">${fD(d.mins,d.eps)}</span></div>
+    <div class="imeta"><span class="islot">${epH}</span>${extra}${srcB}<span class="badge ${tC}">${d.type}</span><a class="iact a-imdb" href="${href}" target="_blank" rel="noopener" aria-label="${esc(d.title)} on IMDb, opens in a new tab">${icon('external')}</a>${editB}${delB}<span class="dur">${fD(d.mins,d.eps)}</span></div>
   </div>`;
 }
 
@@ -907,22 +941,19 @@ function render(){
 function patchRow(r){
   const d=[...all()].find(x=>x.rank===r);if(!d)return;
   const row=$('i-'+r);if(!row)return render();
-  const s=gs(r),wasFocused=row.contains(document.activeElement);
+  const s=gs(r),active=document.activeElement,wasFocused=row.contains(active);
+  const wasAct=wasFocused?active.closest('[data-act]')?.dataset.act:null;
   row.classList.toggle('s-d',s.s===2);
   row.classList.toggle('s-w',s.s===1);
-  row.querySelector('[data-st]').textContent=`Status: ${SLAB[s.s]}. Runtime ${fD(d.mins,d.eps)}.`;
-  // episode stepper appears/disappears with the watching state
-  const meta=row.querySelector('.imeta'),old=meta.querySelector('.ep-t');
-  if(s.s===1&&d.eps){
-    const cur=s.ep||0;
-    const html=`<span class="ep-t">
-      <button class="epb" data-act="epD" data-r="${r}" aria-label="One less episode of ${esc(d.title)}"${cur<=0?' disabled':''}>${icon('minus')}</button>
-      <span class="ep-n" aria-label="${cur} of ${d.eps} episodes watched">${cur}/${d.eps}</span>
-      <button class="epb" data-act="epI" data-r="${r}" aria-label="One more episode of ${esc(d.title)}"${cur>=d.eps?' disabled':''}>${icon('plus')}</button>
-    </span>`;
-    if(old)old.outerHTML=html; else meta.insertAdjacentHTML('afterbegin',html);
-  }else if(old)old.remove();
-  if(wasFocused&&!row.contains(document.activeElement))row.querySelector('.itog')?.focus();
+  const tog=row.querySelector('.itog');
+  tog.setAttribute('aria-pressed',String(s.s===2));
+  row.querySelector('[data-st]').textContent=statusLine(d);
+  row.querySelector('.islot').innerHTML=slotHTML(d);
+  if(wasFocused&&!row.contains(document.activeElement)){
+    // keep focus on the equivalent control, so keyboard users aren't dumped back to the top
+    const same=wasAct?row.querySelector(`[data-act="${wasAct}"]:not([disabled])`):null;
+    (same||row.querySelector('.islot button:not([disabled])')||tog).focus();
+  }
   hud();
 }
 
@@ -944,22 +975,65 @@ function hud(v){
 /* ---------------- handlers ---------------- */
 const W={};window.W=W;
 
-W.tog=(r,hasEps)=>{
-  const s=gs(r),d=[...all()].find(x=>x.rank===r);
-  if(hasEps){
-    if(s.s===0)ST[r]={s:1,ep:s.ep||0};
-    else if(s.s===1)ST[r]={s:2,ep:s.ep};
-    else delete ST[r];
+/* Restores whatever a row looked like before the last status change, so every
+   one of these actions is a single undo away. */
+function statusUndo(r,prev,label){
+  return{label:'Undo',fn:()=>{
+    prev?ST[r]=prev:delete ST[r];
+    save();refresh(r);
+    announce(`${label} restored`);
+  }};
+}
+const refresh=r=>{(AF==='watching'||AF==='done')?render():patchRow(r)};
+
+/* The tick means one thing only: finished. From any state, one click.
+   Unticking returns you to where you were — mid-series goes back to Watching,
+   not all the way to Plan. */
+W.tog=r=>{
+  const d=[...all()].find(x=>x.rank===r);if(!d)return;
+  const s=gs(r),prev=ST[r]?{...ST[r]}:null;
+  if(s.s===2){
+    // untick always resets to Plan. returning to Watching instead would make
+    // Done and Watching oscillate with no way back to Plan, so a row could
+    // never be cleared. Undo restores the exact prior state if this was a slip.
+    delete ST[r];
   }else{
-    if(s.s===0)ST[r]={s:2,ep:0};else delete ST[r];
+    // keep whatever progress existed. overwriting it with the full count would
+    // erase the very thing that lets an untick return you to mid-series.
+    ST[r]={s:2,ep:s.ep||0};
   }
-  announce(`${d?.title||'Title'}: ${SLAB[gs(r).s]}`);
-  save();
-  // filtered views must drop the row that no longer matches
-  (AF==='watching'||AF==='done')?render():patchRow(r);
+  const now=gs(r).s;
+  save();refresh(r);
+  announce(`${d.title}: ${SLAB[now]}`);
+  toast(`${d.title} — ${SLAB[now].toLowerCase()}`,now===2?'ok':'info',statusUndo(r,prev,d.title),'status');
 };
-W.epI=(r,mx)=>{const s=gs(r);s.ep=Math.min((s.ep||0)+1,mx);ST[r]=s;save();patchRow(r);announce(`${s.ep} of ${mx} episodes`)};
-W.epD=r=>{const s=gs(r);s.ep=Math.max((s.ep||0)-1,0);ST[r]=s;save();patchRow(r);announce(`${s.ep} episodes`)};
+
+/* Separate, explicit, and never ambiguous. */
+W.watch=r=>{
+  const d=[...all()].find(x=>x.rank===r);if(!d)return;
+  const s=gs(r),prev=ST[r]?{...ST[r]}:null;
+  // re-watching something finished starts the count over
+  ST[r]={s:1,ep:s.s===2?0:(s.ep||0)};
+  save();refresh(r);
+  announce(`${d.title}: watching`);
+  toast(`Started ${d.title}`,'info',statusUndo(r,prev,d.title),'status');
+};
+
+W.epI=(r,mx)=>{
+  const d=[...all()].find(x=>x.rank===r);
+  const s=gs(r),prev={...s},next=Math.min((s.ep||0)+1,mx);
+  if(next>=mx){
+    // finishing the last episode is finishing the show — don't make them say it twice
+    ST[r]={s:2,ep:mx};
+    save();refresh(r);
+    announce(`${d?.title||'Show'} complete — all ${mx} episodes watched`);
+    toast(`${d?.title||'Show'} complete — all ${mx} episodes.`,'ok',statusUndo(r,prev,d?.title||'Show'),'status');
+    return;
+  }
+  ST[r]={s:1,ep:next};save();patchRow(r);
+  announce(`${next} of ${mx} episodes`);
+};
+W.epD=r=>{const s=gs(r);ST[r]={s:1,ep:Math.max((s.ep||0)-1,0)};save();patchRow(r);announce(`${gs(r).ep} episodes`)};
 
 W.fil=f=>{
   AF=f;
@@ -1400,7 +1474,8 @@ $('main').addEventListener('click',e=>{
   const b=e.target.closest('[data-act]');if(!b)return;
   const r=+b.dataset.r;
   switch(b.dataset.act){
-    case 'tog':W.tog(r,b.dataset.eps==='1');break;
+    case 'tog':W.tog(r);break;
+    case 'watch':W.watch(r);break;
     case 'epI':{const d=[...all()].find(x=>x.rank===r);W.epI(r,d.eps);break}
     case 'epD':W.epD(r);break;
     case 'edit':W.editC(r);break;
