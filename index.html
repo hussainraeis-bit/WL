@@ -97,6 +97,7 @@ svg{display:block;flex-shrink:0}
 .fb.f-or[aria-pressed=true]{color:var(--or);border-color:rgba(108,196,168,.35);background:rgba(108,196,168,.10)}
 .fb.f-w[aria-pressed=true]{color:var(--watch);border-color:rgba(106,173,224,.35);background:rgba(106,173,224,.10)}
 .fb.f-d[aria-pressed=true]{color:var(--gold);border-color:var(--border3);background:var(--gg)}
+.fb.f-new[aria-pressed=true]{color:var(--running);border-color:rgba(92,201,138,.35);background:rgba(92,201,138,.10)}
 .cr{display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap}
 .abtn{min-height:var(--tap-min);display:inline-flex;align-items:center;gap:var(--sp-1);padding:var(--sp-2) var(--sp-4);border-radius:var(--radius);border:1px solid var(--border3);background:var(--gg);color:var(--gold);font-size:var(--fs-xs);cursor:pointer;font-weight:500;transition:background var(--dur) var(--ease)}
 .abtn:hover{background:var(--gg2)}
@@ -164,6 +165,9 @@ svg{display:block;flex-shrink:0}
 .item.s-w{border-left-color:var(--watch);background:rgba(106,173,224,.04)}
 /* done: dimmed but NEVER below the contrast floor -- opacity was .32, which broke every ratio */
 .item.s-d{border-left-color:var(--gold);background:rgba(212,168,83,.03)}
+/* a finished show with new episodes must not read as finished-and-faded */
+.item.s-d.has-new{border-left-color:var(--running);background:rgba(92,201,138,.05)}
+.item.s-d.has-new .it{text-decoration:none;color:var(--text)}
 .item.s-d .it{text-decoration:line-through;text-decoration-color:var(--muted);color:var(--muted)}
 .item.s-d .isub{color:var(--deco)}
 .item.hl{animation:pulse 1.5s var(--ease) 2;border-color:var(--gold);background:var(--gg)}
@@ -213,6 +217,9 @@ svg{display:block;flex-shrink:0}
 @media(hover:none){.pbtn{opacity:1}}
 .pbtn:hover{background:rgba(106,173,224,.14);color:var(--watch);border-color:rgba(106,173,224,.35)}
 .p-again:hover{background:var(--gg);color:var(--gold);border-color:var(--border3)}
+/* a resume prompt is news, so it stays visible rather than waiting for hover */
+.p-new{opacity:1;color:var(--running);border-color:rgba(92,201,138,.35);background:rgba(92,201,138,.08)}
+.p-new:hover{background:rgba(92,201,138,.2);color:var(--running);border-color:var(--running)}
 .slot-now{font-family:var(--mono);font-size:var(--fs-2xs);color:var(--watch);letter-spacing:.04em;padding:0 var(--sp-2)}
 /* the final episode reads as the finishing move */
 .epb-fin{background:var(--gg);color:var(--gold)}
@@ -226,6 +233,7 @@ svg{display:block;flex-shrink:0}
 .b-end{background:rgba(160,147,126,.10);color:var(--ended);border:1px solid rgba(160,147,126,.22)}
 .b-src{background:var(--gg);color:var(--gold2);border:1px solid var(--border)}
 .b-plan{background:rgba(200,200,180,.05);color:var(--muted);border:1px solid rgba(200,200,180,.12)}
+.b-new{background:rgba(92,201,138,.14);color:var(--running);border:1px solid rgba(92,201,138,.35);font-weight:600}
 .b-cust{background:var(--gg2);color:var(--gold);border:1px solid var(--border3)}
 
 .iact{width:var(--tap-min);height:var(--tap-min);display:inline-flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid transparent;background:transparent;cursor:pointer;transition:background var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease)}
@@ -472,6 +480,7 @@ body.locked>*:not(#lockScreen):not(.toasts){display:none}
     <button class="fb f-or"    data-f="or"       aria-pressed="false">OR/EM</button>
     <button class="fb f-w"     data-f="watching" aria-pressed="false">Watching</button>
     <button class="fb f-d"     data-f="done"     aria-pressed="false">Done</button>
+    <button class="fb f-new"   data-f="new"      aria-pressed="false">New episodes</button>
   </div>
   <div class="cr">
     <div class="gsel" id="gsel">
@@ -711,10 +720,10 @@ async function load(){
       if(d.done&&d.done.length)d.done.forEach(r=>{if(!st[r])st[r]={s:2,ep:0}});
       // a passcode changed on another device wins over the local cache
       if(d.passHash)localStorage.setItem('wlHash',d.passHash);
-      return{st,cust:d.custom||[],ca:d.cache||{},ov:d.overrides||{},del:d.deleted||[]}
+      return{st,cust:d.custom||[],ca:d.cache||{},ov:d.overrides||{},del:d.deleted||[],mig:d.mig||0}
     }
   }catch(e){console.error('load failed',e);sy('error')}
-  sy('saved');return{st:{},cust:[],ca:{},ov:{},del:[]}
+  sy('saved');return{st:{},cust:[],ca:{},ov:{},del:[],mig:MIG_VERSION}   // fresh doc needs no migration
 }
 /* Firestore rejects the whole document if any field is `undefined`, and the only
    symptom is the small sync pill flipping to "Offline". Drop them before sending. */
@@ -732,7 +741,7 @@ async function save(){
   if(saving){saveQueued=true;return true}
   saving=true;sy('saving');let ok=true;
   try{
-    const payload=strip({statuses:ST,custom:CI,cache:CA,overrides:OV,deleted:DEL});
+    const payload=strip({statuses:ST,custom:CI,cache:CA,overrides:OV,deleted:DEL,mig:MIG});
     const ph=localStorage.getItem('wlHash');if(ph)payload.passHash=ph;
     await setDoc(DR,payload);sy('saved')
   }
@@ -830,7 +839,7 @@ let ST={},CI=[],CA={},AF='all',GF='',showSV=false;
 /* OV  = per-rank overrides applied on top of the built-in B[] array, so the 81
         seeded titles are editable without touching the source data.
    DEL = soft-deleted ranks (built-in or custom). Reversible, hence undo. */
-let OV={},DEL=[],DELS=new Set();
+let OV={},DEL=[],DELS=new Set(),MIG=0;
 const syncDel=()=>{DELS=new Set(DEL)};
 const merged=d=>OV[d.rank]?{...d,...OV[d.rank]}:d;
 const all=()=>[...B.map(merged),...CI].filter(d=>!DELS.has(d.rank));
@@ -839,6 +848,43 @@ const gs=r=>ST[r]||{s:0,ep:0};
 const fD=(m,e)=>{const h=Math.floor(m/60),r=m%60;return e?`${e}ep · ${h}h${r?r+'m':''}`:`${h}h${r}m`};
 const fH=m=>m>1440?`${(m/1440).toFixed(1)}d`:`${Math.floor(m/60)}h${m%60}m`;
 const SLAB=['Plan','Watching','Done'];
+/* A finished show whose episode count has since grown. Because completing a
+   show records how many episodes existed at the time, a later count increase
+   leaves watched < total — which is exactly "a new season landed". */
+const newBadge=d=>{const n=newCount(d);return n?`<span class="badge b-new">+${n} new</span>`:''};
+function newCount(d){
+  const s=gs(d.rank);
+  if(s.s!==2||!d.eps)return 0;
+  const seen=s.ep||0;
+  if(seen<=0||seen>=d.eps)return 0;      // no record, or nothing new
+  return d.eps-seen;
+}
+/* Shows finished before the watched-count was recorded carry either nothing or a
+   stray partial count from a few stepper clicks. Done means done, so every
+   finished show is levelled to its full count.
+
+   This MUST run exactly once. Re-running it on each load would refill the count
+   the instant a show gained a season and silently erase the very signal it
+   exists to create — hence the persisted MIG version rather than a heuristic. */
+const MIG_VERSION=2;
+function migrateDone(){
+  let n=0;
+  all().forEach(d=>{
+    const s=ST[d.rank];
+    if(s&&s.s===2&&d.eps&&s.ep!==d.eps){s.ep=d.eps;n++}
+  });
+  return n;
+}
+/* Guards against a count corrected downward leaving watched > total. Safe on
+   every load: it can only ever reduce, never manufacture a "new episodes" state. */
+function clampProgress(){
+  let n=0;
+  all().forEach(d=>{
+    const s=ST[d.rank];
+    if(s&&d.eps&&s.ep>d.eps){s.ep=d.eps;n++}
+  });
+  return n;
+}
 /* Says what the tick will DO, not just what the state is — so a screen reader
    user knows the outcome before committing to the click. */
 function statusLine(d){
@@ -855,7 +901,9 @@ function mf(d){
   const s=gs(d.rank);
   if(AF==='all')return true;if(AF==='movie')return d.type==='movie';if(AF==='anime')return d.type==='anime';
   if(AF==='show')return d.type==='show';if(AF==='or')return d.or;if(AF==='watching')return s.s===1;
-  if(AF==='done')return s.s===2;return true}
+  if(AF==='done')return s.s===2;
+  if(AF==='new')return newCount(d)>0;
+  return true}
 
 /* rebuilt whenever titles change, since editing can introduce or retire a genre */
 function fillGenres(){
@@ -907,7 +955,12 @@ function slotHTML(d){
     </span>${seasonStrip(d,cur)}`;
   }
   if(s.s===1)return `<span class="slot-now">Watching now</span>`;   // a movie in progress
-  if(s.s===2)return `<button class="pbtn p-again" data-act="watch" data-r="${d.rank}" aria-label="Watch ${esc(d.title)} again">${icon('undo')}<span>Again</span></button>`;
+  if(s.s===2){
+    const nw=newCount(d);
+    // finished, but the show moved on — pick up from where you stopped
+    if(nw)return `<button class="pbtn p-new" data-act="watch" data-r="${d.rank}" aria-label="Resume ${esc(d.title)} — ${nw} new episode${nw===1?'':'s'} since you finished it">${icon('play')}<span>Resume</span></button>`;
+    return `<button class="pbtn p-again" data-act="watch" data-r="${d.rank}" aria-label="Watch ${esc(d.title)} again from the start">${icon('undo')}<span>Again</span></button>`;
+  }
   return `<button class="pbtn" data-act="watch" data-r="${d.rank}" aria-label="Start watching ${esc(d.title)}">${icon('play')}<span>Start</span></button>`;
 }
 
@@ -922,6 +975,7 @@ function rowHTML(d,n,delay){
   // '' means no source badge at all, rather than a meaningless lone dash.
   const sL=d.custom?'Added':edited?'Edited':d.tag==='planned'?'Plan':d.tag==='rec'?'Rec':'';
   let extra='';
+  const nwc=newCount(d);
   if(d.or)extra+='<span class="badge b-or">OR</span>';
   if(c.status==='running')extra+='<span class="badge b-run">Running</span>';
   else if(c.status==='ended')extra+='<span class="badge b-end">Ended</span>';
@@ -932,7 +986,7 @@ function rowHTML(d,n,delay){
   const delB=`<button class="iact a-del" data-act="del" data-r="${d.rank}" aria-label="Delete ${esc(d.title)}">${icon('trash')}</button>`;
 
   const srcB=sL?`<span class="badge ${sC}">${sL}</span>`:'';
-  return `<div class="item${sc}" id="i-${d.rank}" role="listitem" style="animation-delay:${delay}s">
+  return `<div class="item${sc}${nwc?' has-new':''}" id="i-${d.rank}" role="listitem" style="animation-delay:${delay}s">
     <span class="inum" aria-hidden="true">${n}</span>
     <button class="itog" data-act="tog" data-r="${d.rank}" aria-pressed="${dn}">
       <span class="ichk" aria-hidden="true">${icon('check','ico i-check')}${icon('play','ico i-play')}</span>
@@ -942,7 +996,7 @@ function rowHTML(d,n,delay){
       </span>
       <span class="vh" data-st>${statusLine(d)}</span>
     </button>
-    <div class="imeta"><span class="islot">${epH}</span>${extra}${srcB}<span class="badge ${tC}">${d.type}</span><a class="iact a-imdb" href="${href}" target="_blank" rel="noopener" aria-label="${esc(d.title)} on IMDb, opens in a new tab">${icon('external')}</a>${editB}${delB}<span class="dur">${fD(d.mins,d.eps)}</span></div>
+    <div class="imeta"><span class="islot">${epH}</span><span class="inew">${newBadge(d)}</span>${extra}${srcB}<span class="badge ${tC}">${d.type}</span><a class="iact a-imdb" href="${href}" target="_blank" rel="noopener" aria-label="${esc(d.title)} on IMDb, opens in a new tab">${icon('external')}</a>${editB}${delB}<span class="dur">${fD(d.mins,d.eps)}</span></div>
   </div>`;
 }
 
@@ -975,10 +1029,12 @@ function patchRow(r){
   const wasAct=wasFocused?active.closest('[data-act]')?.dataset.act:null;
   row.classList.toggle('s-d',s.s===2);
   row.classList.toggle('s-w',s.s===1);
+  row.classList.toggle('has-new',newCount(d)>0);
   const tog=row.querySelector('.itog');
   tog.setAttribute('aria-pressed',String(s.s===2));
   row.querySelector('[data-st]').textContent=statusLine(d);
   row.querySelector('.islot').innerHTML=slotHTML(d);
+  row.querySelector('.inew').innerHTML=newBadge(d);
   if(wasFocused&&!row.contains(document.activeElement)){
     // keep focus on the equivalent control, so keyboard users aren't dumped back to the top
     const same=wasAct?row.querySelector(`[data-act="${wasAct}"]:not([disabled])`):null;
@@ -1028,9 +1084,9 @@ W.tog=r=>{
     // never be cleared. Undo restores the exact prior state if this was a slip.
     delete ST[r];
   }else{
-    // keep whatever progress existed. overwriting it with the full count would
-    // erase the very thing that lets an untick return you to mid-series.
-    ST[r]={s:2,ep:s.ep||0};
+    // record HOW MANY you watched, not just that you're done. when a show later
+    // gains a season, this stored count is what reveals there's something new.
+    ST[r]={s:2,ep:d.eps||s.ep||0};
   }
   const now=gs(r).s;
   save();refresh(r);
@@ -1041,12 +1097,13 @@ W.tog=r=>{
 /* Separate, explicit, and never ambiguous. */
 W.watch=r=>{
   const d=[...all()].find(x=>x.rank===r);if(!d)return;
-  const s=gs(r),prev=ST[r]?{...ST[r]}:null;
-  // re-watching something finished starts the count over
-  ST[r]={s:1,ep:s.s===2?0:(s.ep||0)};
+  const s=gs(r),prev=ST[r]?{...ST[r]}:null,nw=newCount(d);
+  // resume where you stopped if the show gained episodes; otherwise a finished
+  // show restarts from zero, and an unstarted one simply begins
+  ST[r]={s:1,ep:nw?s.ep:(s.s===2?0:(s.ep||0))};
   save();refresh(r);
   announce(`${d.title}: watching`);
-  toast(`Started ${d.title}`,'info',statusUndo(r,prev,d.title),'status');
+  toast(nw?`Resumed ${d.title} — ${nw} new episode${nw===1?'':'s'}`:`Started ${d.title}`,'info',statusUndo(r,prev,d.title),'status');
 };
 
 W.epI=(r,mx)=>{
@@ -1589,8 +1646,13 @@ $('confirm').addEventListener('click',e=>{if(e.target.id==='confirm')resolveCf(f
 onAuthStateChanged(auth,async user=>{
   if(!user)return;
   const s=await load();
-  ST=s.st;CI=s.cust;CA=s.ca;OV=s.ov;DEL=s.del;syncDel();
+  ST=s.st;CI=s.cust;CA=s.ca;OV=s.ov;DEL=s.del;MIG=s.mig;syncDel();
+  let dirty=clampProgress()>0;
+  if(MIG<MIG_VERSION){ if(migrateDone())dirty=true; MIG=MIG_VERSION; dirty=true }
+  if(dirty)save();
   fillGenres();render();
+  const nw=all().filter(d=>newCount(d)>0).length;
+  if(nw)toast(`${nw} finished show${nw===1?' has':'s have'} new episodes.`,'ok');
 });
 signInAnonymously(auth).catch(e=>{console.error('sign-in failed',e);sy('error');toast('Could not connect — working offline.','err')});
 fillGenres();render();
