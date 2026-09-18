@@ -125,6 +125,9 @@ body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xm
   <button class="ibtn" onclick="W.rand()" title="Random pick">🎲</button>
   <button class="ibtn" onclick="W.togSV()" title="Stats">📊</button>
   <button class="ibtn" onclick="W.enrichAll()" title="Enrich all IMDB links" id="enrBtn">🔄</button>
+  <button class="ibtn" onclick="W.exportJSON()" title="Backup as JSON">📥</button>
+  <button class="ibtn" onclick="document.getElementById('impF').click()" title="Restore from JSON">📤</button>
+  <input type="file" id="impF" accept="application/json" style="display:none" onchange="W.importJSON(this)">
   <button class="abtn" onclick="W.openM()">+ Add</button>
   <div class="pw"><div class="pb"><div class="pfi" id="pf"></div></div><span class="pt" id="ptx">0/—</span></div>
 </div></div>
@@ -154,11 +157,20 @@ body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xm
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import{getFirestore,doc,getDoc,setDoc}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import{getAuth,signInAnonymously,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const app=initializeApp({apiKey:"AIzaSyBrmKXcXeLMVPMDa8eR0h9ryWCsdZvKIEk",authDomain:"hussain-watchlist.firebaseapp.com",projectId:"hussain-watchlist",storageBucket:"hussain-watchlist.firebasestorage.app",messagingSenderId:"723310300304",appId:"1:723310300304:web:2a5f0cddeb321edb7a5c15"});
-const db=getFirestore(app),DR=doc(db,"watchlist","progress"),OK="d96badfe";
-function sy(s){const e=document.getElementById('sync'),m={saving:'⏳ Saving…',saved:'✓ Synced',error:'⚠ Offline',loading:'⏳ Loading…'},c={saving:'var(--gold)',saved:'var(--running)',error:'var(--movie)',loading:'var(--gold)'};e.textContent=m[s]||'';e.style.color=c[s]||''}
-async function load(){sy('loading');try{const s=await getDoc(DR);if(s.exists()){sy('saved');const d=s.data();let st=d.statuses||{};if(d.done&&d.done.length)d.done.forEach(r=>{if(!st[r])st[r]={s:2,ep:0}});return{st,cust:d.custom||[],ca:d.cache||{}}}}catch(e){sy('error')}sy('saved');return{st:{},cust:[],ca:{}}}
-async function save(){sy('saving');try{await setDoc(DR,{statuses:ST,custom:CI,cache:CA});sy('saved')}catch(e){sy('error')}}
+const db=getFirestore(app),DR=doc(db,"watchlist","progress"),OK="d96badfe",auth=getAuth(app);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function sy(s){const e=document.getElementById('sync'),m={saving:'⏳ Saving…',saved:'✓ Synced',error:'⚠ Offline — changes kept locally',loading:'⏳ Loading…'},c={saving:'var(--gold)',saved:'var(--running)',error:'var(--movie)',loading:'var(--gold)'};e.textContent=m[s]||'';e.style.color=c[s]||''}
+async function load(){sy('loading');try{const s=await getDoc(DR);if(s.exists()){sy('saved');const d=s.data();let st=d.statuses||{};if(d.done&&d.done.length)d.done.forEach(r=>{if(!st[r])st[r]={s:2,ep:0}});return{st,cust:d.custom||[],ca:d.cache||{}}}}catch(e){console.error('load failed',e);sy('error')}sy('saved');return{st:{},cust:[],ca:{}}}
+let saving=false,saveQueued=false;
+async function save(){
+  if(saving){saveQueued=true;return}
+  saving=true;sy('saving');
+  try{await setDoc(DR,{statuses:ST,custom:CI,cache:CA});sy('saved')}catch(e){console.error('save failed',e);sy('error')}
+  saving=false;
+  if(saveQueued){saveQueued=false;save()}
+}
 
 const B=[
 {rank:55,title:"Einstein and the Bomb",sub:"2024 · Netflix",type:"movie",genre:"Documentary / History",mins:75,tag:"personal"},
@@ -275,7 +287,7 @@ function render(){
       h+=`<div class="item${sc}" id="i-${d.rank}" style="animation-delay:${stag}s" onclick="W.tog(${d.rank},${!!d.eps})">
         <div class="inum">${n++}</div><div class="imain">
           <div class="ichk"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="var(--bg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="iinfo"><div class="it">${d.title}</div><div class="isub">${d.sub||''}${d.genre?' · '+d.genre:''}</div></div>
+          <div class="iinfo"><div class="it">${esc(d.title)}</div><div class="isub">${esc(d.sub||'')}${d.genre?' · '+esc(d.genre):''}</div></div>
         </div><div class="imeta">${epH}${extra}<span class="${sC}">${sL}</span><span class="badge ${tC}">${d.type}</span><a class="imdb" href="${href}" target="_blank" rel="noopener" onclick="event.stopPropagation()">IMDb↗</a>${editB}${delB}<span class="dur">${fD(d.mins,d.eps)}</span></div></div>`});h+='</div>'});
   el.innerHTML=h;hud(v)}
 
@@ -319,14 +331,14 @@ function renderSV(){
 
 // OMDB
 let sT;W.dSearch=q=>{clearTimeout(sT);if(q.length<2){document.getElementById('sr').innerHTML='';return}sT=setTimeout(()=>oS(q),500)};
-async function oS(q){try{const r=await fetch(`https://www.omdbapi.com/?apikey=${OK}&s=${encodeURIComponent(q)}`);const d=await r.json();if(d.Search){const sr=document.getElementById('sr');sr.innerHTML='';d.Search.slice(0,6).forEach(i=>{const div=document.createElement('div');div.className='sri';div.innerHTML=`<img class="srp" src="${i.Poster!=='N/A'?i.Poster:''}" alt="" onerror="this.style.background='var(--surface2)'"><div><div class="srt">${i.Title}</div><div class="srm">${i.Year} · ${i.Type}</div></div>`;div.onclick=()=>oSel(i.imdbID);sr.appendChild(div)})}}catch(e){}}
+async function oS(q){try{const r=await fetch(`https://www.omdbapi.com/?apikey=${OK}&s=${encodeURIComponent(q)}`);const d=await r.json();const sr=document.getElementById('sr');sr.innerHTML='';if(d.Search){d.Search.slice(0,6).forEach(i=>{const div=document.createElement('div');div.className='sri';const img=i.Poster&&i.Poster!=='N/A'?i.Poster:'';div.innerHTML=`<img class="srp" src="${esc(img)}" alt="" onerror="this.style.background='var(--surface2)'"><div><div class="srt">${esc(i.Title)}</div><div class="srm">${esc(i.Year)} · ${esc(i.Type)}</div></div>`;div.onclick=()=>oSel(i.imdbID);sr.appendChild(div)})}else{sr.innerHTML='<div style="padding:8px;font-size:11px;color:var(--muted)">No results.</div>'}}catch(e){console.error('OMDB search failed',e);document.getElementById('sr').innerHTML='<div style="padding:8px;font-size:11px;color:var(--movie)">Search failed — check connection.</div>'}}
 async function oSel(id){try{const r=await fetch(`https://www.omdbapi.com/?apikey=${OK}&i=${id}&plot=short`);const d=await r.json();
   document.getElementById('mTi').value=d.Title||'';document.getElementById('mGe').value=d.Genre||'';
   document.getElementById('mSu').value=[d.Year,d.Actors?d.Actors.split(',')[0]:''].filter(Boolean).join(' · ');
   document.getElementById('mImdb').value=d.imdbID||'';
   const isSer=d.Type==='series';document.getElementById('mTy').value=isSer?'show':'movie';W.tyC();
   document.getElementById('mMi').value=parseInt(d.Runtime)||0;
-  document.getElementById('sr').innerHTML='';document.getElementById('mS').value=''}catch(e){}}
+  document.getElementById('sr').innerHTML='';document.getElementById('mS').value=''}catch(e){console.error('OMDB lookup failed',e);alert('Could not fetch title details — check connection and try again.')}}
 
 W.tyC=()=>{const s=document.getElementById('mTy').value!=='movie';document.getElementById('mEW').style.display=s?'block':'none';document.getElementById('mDL').textContent=s?'Ep runtime (min)':'Runtime (min)';document.getElementById('mDN').textContent=s?'Per episode':'Total runtime'};
 
@@ -336,28 +348,62 @@ W.openM=(editRank)=>{
   document.getElementById('mTitle').textContent=editRank?'Edit title':'Add a title';
   if(editRank){const d=[...all()].find(x=>x.rank===editRank);if(d){document.getElementById('mTi').value=d.title;document.getElementById('mTy').value=d.type;W.tyC();document.getElementById('mTg').value=d.tag||'personal';document.getElementById('mGe').value=d.genre||'';document.getElementById('mMi').value=d.eps?Math.round(d.mins/d.eps):d.mins;if(d.eps)document.getElementById('mEp').value=d.eps;document.getElementById('mSu').value=d.sub||'';const c=CA[d.rank];if(c&&c.id)document.getElementById('mImdb').value=c.id}}
   document.getElementById('modal').classList.add('open');document.getElementById(editRank?'mTi':'mS').focus()};
-W.closeM=()=>{document.getElementById('modal').classList.remove('open');['mS','mTi','mGe','mSu','mMi','mEp'].forEach(id=>document.getElementById(id).value='');document.getElementById('mImdb').value='';document.getElementById('mEdit').value='';document.getElementById('sr').innerHTML=''};
+W.closeM=()=>{document.getElementById('modal').classList.remove('open');['mS','mTi','mGe','mSu','mMi','mEp'].forEach(id=>document.getElementById(id).value='');document.getElementById('mImdb').value='';document.getElementById('mEdit').value='';document.getElementById('sr').innerHTML='';document.getElementById('mTy').value='movie';document.getElementById('mTg').value='personal';W.tyC()};
 W.editC=r=>W.openM(r);
 
 W.submit=()=>{
   const editRank=parseInt(document.getElementById('mEdit').value)||null;
   const title=document.getElementById('mTi').value.trim(),type=document.getElementById('mTy').value,tag=document.getElementById('mTg').value,genre=document.getElementById('mGe').value.trim(),sub=document.getElementById('mSu').value.trim(),mR=parseInt(document.getElementById('mMi').value)||0,eps=parseInt(document.getElementById('mEp').value)||null,imdbID=document.getElementById('mImdb').value.trim();
   if(!title||!mR){alert('Title and runtime required.');return}
+  if(!editRank){const dup=all().find(d=>d.title.toLowerCase()===title.toLowerCase());if(dup&&!confirm(`"${dup.title}" is already on your list. Add anyway?`))return}
   const tot=(type!=='movie'&&eps)?mR*eps:mR;
   if(editRank){const idx=CI.findIndex(c=>c.rank===editRank);if(idx>=0){CI[idx]={...CI[idx],title,sub,type,genre,mins:tot,tag,or:tag==='or',...(eps?{eps}:{eps:undefined})};if(imdbID)CA[editRank]={...CA[editRank],id:imdbID}}}
   else{const mx=Math.max(...all().map(d=>d.rank),999);const ni={rank:mx+1,title,sub,type,genre,mins:tot,tag,or:tag==='or',custom:true,...(eps?{eps}:{})};CI.push(ni);if(imdbID)CA[ni.rank]={id:imdbID}}
   save();W.closeM();render()};
 
+// Backup / restore
+W.exportJSON=()=>{
+  const blob=new Blob([JSON.stringify({statuses:ST,custom:CI,cache:CA},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`watchlist-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();
+  URL.revokeObjectURL(a.href)};
+W.importJSON=input=>{
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{const d=JSON.parse(reader.result);
+      if(typeof d!=='object'||d===null)throw new Error('Not a valid backup file');
+      if(!confirm('This will replace your current watchlist data with the backup. Continue?'))return;
+      ST=d.statuses||{};CI=d.custom||[];CA=d.cache||{};
+      save();render();alert('Restored from backup.')
+    }catch(e){console.error('import failed',e);alert('Could not read that file — make sure it is a watchlist JSON backup.')}
+    input.value=''
+  };
+  reader.readAsText(file)};
+
 // Enrich
 W.enrichAll=async()=>{const btn=document.getElementById('enrBtn');btn.textContent='⏳';btn.disabled=true;
-  const items=all().filter(d=>!CA[d.rank]||!CA[d.rank].id);let done=0;
-  for(const d of items){try{const r=await fetch(`https://www.omdbapi.com/?apikey=${OK}&t=${encodeURIComponent(d.title)}&type=${d.type==='anime'?'series':d.type==='show'?'series':'movie'}`);const j=await r.json();
-    if(j.imdbID){const yr=j.Year||'';let status='';if(yr.includes('–')){status=yr.endsWith('–')||yr.endsWith('– ')?'running':'ended'}
-    CA[d.rank]={id:j.imdbID,status};done++}
-    if(done%10===0){await save();render()}}catch(e){}await new Promise(r=>setTimeout(r,250))}
-  await save();render();btn.textContent='🔄';btn.disabled=false;alert(`Done! Enriched ${done} titles.`)};
+  const items=all().filter(d=>!CA[d.rank]||!CA[d.rank].id);let done=0,failed=0,i=0;
+  const CONC=4;
+  async function worker(){
+    while(i<items.length){
+      const d=items[i++];
+      try{const r=await fetch(`https://www.omdbapi.com/?apikey=${OK}&t=${encodeURIComponent(d.title)}&type=${d.type==='anime'?'series':d.type==='show'?'series':'movie'}`);const j=await r.json();
+        if(j.imdbID){const yr=j.Year||'';let status='';if(yr.includes('–')){status=yr.endsWith('–')||yr.endsWith('– ')?'running':'ended'}
+        CA[d.rank]={id:j.imdbID,status};done++}else{failed++}
+      }catch(e){console.error('enrich failed for',d.title,e);failed++}
+      render()
+    }
+  }
+  await Promise.all(Array.from({length:CONC},worker));
+  await save();render();btn.textContent='🔄';btn.disabled=false;
+  alert(`Done! Enriched ${done} titles.${failed?` (${failed} not found or failed.)`:''}`)};
 
-(async()=>{const s=await load();ST=s.st;CI=s.cust;CA=s.ca;render()})();
+onAuthStateChanged(auth,async user=>{
+  if(!user)return;
+  const s=await load();ST=s.st;CI=s.cust;CA=s.ca;render()
+});
+signInAnonymously(auth).catch(e=>{console.error('sign-in failed',e);sy('error')});
 </script>
 </body>
 </html>
