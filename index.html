@@ -127,7 +127,7 @@ body.locked>*:not(#lockScreen){display:none}
     const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
     return[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('')
   }
-  function unlock(){document.body.classList.remove('locked')}
+  function unlock(){document.body.classList.remove('locked');document.getElementById('lockScreen').style.display='none'}
   if(localStorage.getItem('wlUnlocked')==='1'){unlock();return}
   const li=document.getElementById('lockInput'),err=document.getElementById('lockErr'),btn=document.getElementById('lockBtn');
   li.focus();
