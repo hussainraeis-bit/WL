@@ -2,198 +2,600 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
 <title>Hussain's Master Watchlist</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;1,400;1,500&family=Lexend:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
+  /* ---- surfaces ---- */
   --bg:#1a1b24;--bg2:#20212c;--surface:#282a36;--surface2:#30323f;--surface3:#383a48;
-  --border:rgba(212,168,83,.08);--border2:rgba(212,168,83,.14);--border3:rgba(212,168,83,.24);
-  --text:#ece8db;--text2:#ccc8bc;--muted:#8a867c;--faint:#585449;
-  --gold:#d4a853;--gold2:#b8923e;--gg:rgba(212,168,83,.1);--gg2:rgba(212,168,83,.18);
+  --border:rgba(212,168,83,.10);--border2:rgba(212,168,83,.18);--border3:rgba(212,168,83,.30);
+
+  /* ---- text (all verified >=4.5:1 on bg, surface AND surface2) ---- */
+  --text:#ece8db;      /* 13.97:1 */
+  --text2:#ccc8bc;     /* 10.24:1 */
+  --muted:#a5a094;     /* 6.57 / 5.46 / 4.87 -- was #8a867c which failed on hover */
+  --deco:#585449;      /* 2.27:1 -- DECORATION ONLY. never text, never an icon that carries meaning */
+
+  /* ---- brand ---- */
+  --gold:#d4a853;--gold2:#b8923e;--gg:rgba(212,168,83,.10);--gg2:rgba(212,168,83,.18);
+  --imdb:#f5c518;      /* 10.51:1 -- was .55 alpha = 3.60:1, failed */
+
+  /* ---- semantic ---- */
   --anime:#a898d0;--show:#62b0bd;--movie:#d88060;--or:#6cc4a8;--watch:#6aade0;
-  --running:#5cc98a;--ended:#a0937e;
-  --serif:'Cormorant',Georgia,serif;--sans:'Lexend',sans-serif;--mono:'IBM Plex Mono',monospace;
+  --running:#5cc98a;--ended:#a0937e;--danger:#e8736b;
+
+  /* ---- type ---- */
+  --serif:'Cormorant',Georgia,serif;--sans:'Inter',system-ui,sans-serif;--mono:'IBM Plex Mono',monospace;
+  --fs-2xs:11px;--fs-xs:12px;--fs-sm:13px;--fs-base:15px;--fs-lg:17px;--fs-xl:22px;--fs-2xl:30px;--fs-3xl:42px;
+
+  /* ---- spacing (8pt rhythm, density 7) ---- */
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:20px;--sp-6:28px;--sp-7:40px;--sp-8:56px;
+  --gutter:clamp(1rem,4vw,3rem);
+
+  /* ---- motion (Subtle tier) ---- */
+  --dur-fast:120ms;--dur:200ms;--dur-slow:320ms;--ease:cubic-bezier(.4,0,.2,1);
+
+  --radius:8px;--radius-lg:14px;
+  --tap:44px;            /* comfortable target */
+  --tap-min:28px;        /* compact target, still > WCAG 2.2 AA 24px */
+  --z-modal:100;--z-toast:200;--z-lock:300;
 }
-*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.35}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg);color:var(--text);font-family:var(--sans);
+  font-size:var(--fs-base);line-height:1.5;min-height:100dvh;overflow-x:hidden;
+  font-feature-settings:'tnum' 0;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+/* film-grain overlay -- purely decorative */
+body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.3}
 
-.hero{padding:2.5rem 3rem 2rem;position:relative}.hero::after{content:'';position:absolute;bottom:0;left:3rem;right:3rem;height:1px;background:linear-gradient(90deg,transparent,var(--gold2),transparent)}
-.hero-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1.5rem}
-.hero h1{font-family:var(--serif);font-size:3.2rem;font-weight:300;line-height:1;letter-spacing:-.02em}.hero h1 em{font-style:italic;font-weight:500;background:linear-gradient(135deg,var(--gold),#e8c97d,var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hero-sub{margin-top:.5rem;font-size:12px;color:var(--muted);font-weight:300;letter-spacing:.03em}
-.sync{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;margin-top:.5rem;padding:3px 10px;border-radius:999px;background:var(--gg);border:1px solid var(--border2);color:var(--gold2)}
-.stats-row{display:flex;gap:2rem}.stat{text-align:right}.stat-n{font-family:var(--serif);font-size:2.2rem;font-weight:300;line-height:1}.stat-n.gold{color:var(--gold)}.stat-n.blue{color:var(--watch)}.stat-l{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.1em}
+/* ============ a11y utilities ============ */
+.vh{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip{position:absolute;left:var(--sp-2);top:-100px;z-index:400;background:var(--gold);color:#1a1500;padding:var(--sp-2) var(--sp-4);border-radius:var(--radius);font-weight:500;font-size:var(--fs-sm);text-decoration:none;transition:top var(--dur) var(--ease)}
+.skip:focus{top:var(--sp-2)}
 
-.ctrl{padding:.85rem 3rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;background:var(--bg2);border-bottom:1px solid var(--border)}
-.filters{display:flex;gap:4px;flex-wrap:wrap}
-.fb{padding:5px 11px;border-radius:6px;border:1px solid transparent;background:transparent;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--sans);font-weight:400;transition:all .2s}.fb:hover{color:var(--text2);background:var(--surface)}.fb.on{background:var(--surface2);color:var(--text);border-color:var(--border2)}
-.fb.f-anime.on{color:var(--anime);border-color:rgba(168,152,208,.3);background:rgba(168,152,208,.08)}
-.fb.f-show.on{color:var(--show);border-color:rgba(98,176,189,.3);background:rgba(98,176,189,.08)}
-.fb.f-movie.on{color:var(--movie);border-color:rgba(216,128,96,.3);background:rgba(216,128,96,.08)}
-.fb.f-or.on{color:var(--or);border-color:rgba(108,196,168,.3);background:rgba(108,196,168,.08)}
-.fb.f-w.on{color:var(--watch);border-color:rgba(106,173,224,.3);background:rgba(106,173,224,.08)}
-.fb.f-d.on{color:var(--gold);border-color:rgba(212,168,83,.3);background:var(--gg)}
-.cr{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.abtn{padding:5px 14px;border-radius:6px;border:1px solid var(--border3);background:var(--gg);color:var(--gold);font-size:11px;cursor:pointer;font-family:var(--sans);font-weight:500;transition:all .2s}.abtn:hover{background:var(--gg2)}
-.ibtn{padding:5px 8px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;line-height:1}.ibtn:hover{background:var(--surface);color:var(--text)}
-.pw{display:flex;align-items:center;gap:8px}.pb{width:90px;height:3px;background:var(--surface2);border-radius:2px;overflow:hidden}.pfi{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold2),var(--gold));transition:width .4s}.pt{font-family:var(--mono);font-size:10px;color:var(--muted)}
+/* One focus treatment for the entire app. 3:1+ against every surface. */
+:where(a,button,input,select,[tabindex]):focus-visible{
+  outline:2px solid var(--gold);outline-offset:2px;border-radius:var(--radius)
+}
+:where(button,a,[role=button],label,select){touch-action:manipulation}
+button,select,input{font-family:inherit}
+svg{display:block;flex-shrink:0}
+.ico{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
 
-.list{padding:0 3rem 6rem}.tier{margin-top:1.8rem}.tier-h{display:flex;align-items:center;gap:14px;margin-bottom:.4rem}.tier-l{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--faint);white-space:nowrap}.tier-ln{flex:1;height:1px;background:linear-gradient(90deg,var(--border2),transparent)}
+/* ============ hero ============ */
+.hero{padding:var(--sp-7) var(--gutter) var(--sp-6);position:relative}
+.hero::after{content:'';position:absolute;bottom:0;left:var(--gutter);right:var(--gutter);height:1px;background:linear-gradient(90deg,transparent,var(--gold2),transparent)}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--sp-5)}
+.hero h1{font-family:var(--serif);font-size:var(--fs-3xl);font-weight:300;line-height:1.05;letter-spacing:-.02em}
+.hero h1 em{font-style:italic;font-weight:500;background:linear-gradient(135deg,var(--gold),#e8c97d,var(--gold2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{margin-top:var(--sp-2);font-size:var(--fs-xs);color:var(--muted);letter-spacing:.02em;max-width:52ch}
+.sync{display:inline-flex;align-items:center;gap:var(--sp-1);font-family:var(--mono);font-size:var(--fs-2xs);margin-top:var(--sp-3);padding:var(--sp-1) var(--sp-3);border-radius:999px;background:var(--gg);border:1px solid var(--border2);color:var(--gold2)}
+.sync .ico{width:11px;height:11px}
+.stats-row{display:flex;gap:var(--sp-6)}
+.stat{text-align:right}
+.stat-n{font-family:var(--serif);font-size:var(--fs-2xl);font-weight:400;line-height:1;font-variant-numeric:tabular-nums}
+.stat-n.gold{color:var(--gold)}.stat-n.blue{color:var(--watch)}
+.stat-l{font-family:var(--mono);font-size:var(--fs-2xs);color:var(--muted);margin-top:var(--sp-1);text-transform:uppercase;letter-spacing:.1em}
 
-@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(212,168,83,0)}50%{box-shadow:0 0 16px 4px rgba(212,168,83,.25)}}
+/* ============ control bar ============ */
+.ctrl{padding:var(--sp-3) var(--gutter);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-3);background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
+.filters{display:flex;gap:var(--sp-1);flex-wrap:wrap}
+.fb{min-height:var(--tap-min);padding:var(--sp-1) var(--sp-3);border-radius:var(--radius);border:1px solid transparent;background:transparent;color:var(--muted);font-size:var(--fs-xs);cursor:pointer;font-weight:450;transition:color var(--dur) var(--ease),background var(--dur) var(--ease),border-color var(--dur) var(--ease)}
+.fb:hover{color:var(--text2);background:var(--surface)}
+.fb[aria-pressed=true]{background:var(--surface2);color:var(--text);border-color:var(--border2);font-weight:500}
+.fb.f-anime[aria-pressed=true]{color:var(--anime);border-color:rgba(168,152,208,.35);background:rgba(168,152,208,.10)}
+.fb.f-show[aria-pressed=true]{color:var(--show);border-color:rgba(98,176,189,.35);background:rgba(98,176,189,.10)}
+.fb.f-movie[aria-pressed=true]{color:var(--movie);border-color:rgba(216,128,96,.35);background:rgba(216,128,96,.10)}
+.fb.f-or[aria-pressed=true]{color:var(--or);border-color:rgba(108,196,168,.35);background:rgba(108,196,168,.10)}
+.fb.f-w[aria-pressed=true]{color:var(--watch);border-color:rgba(106,173,224,.35);background:rgba(106,173,224,.10)}
+.fb.f-d[aria-pressed=true]{color:var(--gold);border-color:var(--border3);background:var(--gg)}
+.cr{display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap}
+.abtn{min-height:var(--tap-min);display:inline-flex;align-items:center;gap:var(--sp-1);padding:var(--sp-2) var(--sp-4);border-radius:var(--radius);border:1px solid var(--border3);background:var(--gg);color:var(--gold);font-size:var(--fs-xs);cursor:pointer;font-weight:500;transition:background var(--dur) var(--ease)}
+.abtn:hover{background:var(--gg2)}
+.abtn .ico{width:14px;height:14px}
+.ibtn{width:var(--tap-min);height:var(--tap-min);display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius);border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;transition:background var(--dur) var(--ease),color var(--dur) var(--ease)}
+.ibtn:hover{background:var(--surface);color:var(--text)}
+.ibtn .ico{width:16px;height:16px}
+.ibtn[disabled]{opacity:.45;cursor:not-allowed}
+/* genre filter — an independent axis, ANDed with the type/status filter */
+.gsel{position:relative;display:flex;align-items:center}
+.gsel select{
+  min-height:var(--tap-min);padding:var(--sp-1) var(--sp-6) var(--sp-1) var(--sp-3);
+  border-radius:var(--radius);border:1px solid var(--border2);background:transparent;
+  color:var(--muted);font-size:var(--fs-xs);cursor:pointer;appearance:none;
+  max-width:170px;text-overflow:ellipsis;
+  transition:color var(--dur) var(--ease),background var(--dur) var(--ease),border-color var(--dur) var(--ease);
+}
+.gsel select:hover{color:var(--text2);background:var(--surface)}
+.gsel select option{background:var(--bg);color:var(--text)}
+.gsel.on select{background:var(--gg);color:var(--gold);border-color:var(--border3);font-weight:500}
+.gsel .chev{position:absolute;right:var(--sp-2);pointer-events:none;width:12px;height:12px;color:currentColor;opacity:.7}
+.gclr{margin-left:var(--sp-1);width:var(--tap-min);height:var(--tap-min);display:none;align-items:center;justify-content:center;border-radius:var(--radius);border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer}
+.gsel.on+.gclr{display:inline-flex}
+.gclr:hover{background:var(--surface);color:var(--text)}
+.gclr .ico{width:13px;height:13px}
+/* repair-shows review list */
+.rep-list{max-height:min(46dvh,420px);overflow-y:auto;margin:var(--sp-3) 0;border:1px solid var(--border);border-radius:var(--radius)}
+.rep-row{display:flex;align-items:flex-start;gap:var(--sp-3);padding:var(--sp-3);border-bottom:1px solid var(--border);min-height:var(--tap)}
+.rep-row:last-child{border-bottom:none}
+.rep-row input[type=checkbox]{width:18px;height:18px;margin-top:2px;accent-color:var(--gold);flex-shrink:0;cursor:pointer}
+.rep-b{min-width:0;flex:1}
+.rep-t{font-size:var(--fs-sm);color:var(--text)}
+.rep-d{font-size:var(--fs-xs);color:var(--muted);font-family:var(--mono);margin-top:2px}
+.rep-d ins{color:var(--running);text-decoration:none}
+.rep-d del{color:var(--danger);opacity:.8}
+.rep-sum{font-size:var(--fs-xs);color:var(--muted);margin-bottom:var(--sp-2)}
+.mo-reset{margin-top:var(--sp-3);width:100%;min-height:var(--tap-min);padding:var(--sp-2);border-radius:var(--radius);background:transparent;border:1px dashed var(--border3);color:var(--muted);font-size:var(--fs-xs);cursor:pointer}
+.mo-reset:hover{color:var(--gold);border-color:var(--gold2)}
+.pw{display:flex;align-items:center;gap:var(--sp-2)}
+.pb{width:90px;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden}
+.pfi{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold2),var(--gold));transition:width var(--dur-slow) var(--ease)}
+.pt{font-family:var(--mono);font-size:var(--fs-2xs);color:var(--muted);font-variant-numeric:tabular-nums}
 
-.item{display:grid;grid-template-columns:28px 1fr auto;gap:0 12px;align-items:center;padding:9px 12px;border-radius:8px;cursor:pointer;transition:all .15s;border:1px solid transparent;border-left:3px solid transparent;animation:fadeUp .3s ease both}
+/* ============ list ============ */
+.list{padding:0 var(--gutter) var(--sp-8);max-width:1600px;margin:0 auto}
+.tier{margin-top:var(--sp-6)}
+.tier-h{display:flex;align-items:center;gap:var(--sp-4);margin-bottom:var(--sp-2)}
+.tier-l{font-family:var(--mono);font-size:var(--fs-2xs);text-transform:uppercase;letter-spacing:.12em;color:var(--muted);white-space:nowrap}
+.tier-ln{flex:1;height:1px;background:linear-gradient(90deg,var(--border2),transparent)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(212,168,83,0)}50%{box-shadow:0 0 16px 4px rgba(212,168,83,.28)}}
+
+.item{
+  display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:0 var(--sp-3);align-items:center;
+  border-radius:var(--radius);border:1px solid transparent;border-left:3px solid transparent;
+  transition:background var(--dur) var(--ease),border-color var(--dur) var(--ease);
+  animation:fadeUp var(--dur-slow) var(--ease) both;
+}
 .item:hover{background:var(--surface);border-color:var(--border)}
-.item.s-w{border-left-color:var(--watch);background:rgba(106,173,224,.03)}.item.s-d{opacity:.32;border-left-color:var(--gold)}.item.s-d .it{text-decoration:line-through;text-decoration-color:var(--faint)}
-.item.hl{animation:pulse 1.5s ease 2;border-color:var(--gold);background:var(--gg)}
-.inum{font-family:var(--mono);font-size:10px;color:var(--faint);text-align:right;user-select:none}
-.imain{display:flex;align-items:center;gap:10px;min-width:0}
-.ichk{width:17px;height:17px;border-radius:5px;border:1.5px solid var(--faint);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
-.item.s-w .ichk{border-color:var(--watch);background:rgba(106,173,224,.15)}.item.s-d .ichk{background:var(--gold);border-color:var(--gold);box-shadow:0 0 8px rgba(212,168,83,.15)}
-.ichk svg{opacity:0;transition:opacity .15s}.item.s-d .ichk svg{opacity:1}
-.item.s-w .ichk::after{content:'▶';font-size:7px;color:var(--watch)}
-.iinfo{min-width:0}
-.it{font-size:13px;font-weight:400;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;letter-spacing:.01em}
-.isub{font-size:10.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:300}
-.imeta{display:flex;align-items:center;gap:4px;flex-shrink:0}
-.ep-t{display:inline-flex;align-items:center;gap:2px;padding:2px 5px;border-radius:4px;background:rgba(106,173,224,.08);border:1px solid rgba(106,173,224,.18);font-family:var(--mono);font-size:9px;color:var(--watch)}
-.epb{width:15px;height:15px;border-radius:3px;border:1px solid rgba(106,173,224,.25);background:transparent;color:var(--watch);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--mono)}.epb:hover{background:rgba(106,173,224,.12)}
-.badge{font-size:8.5px;padding:2px 6px;border-radius:4px;font-family:var(--mono);letter-spacing:.04em;font-weight:500;white-space:nowrap}
-.b-movie{background:rgba(216,128,96,.08);color:var(--movie);border:1px solid rgba(216,128,96,.15)}
-.b-anime{background:rgba(168,152,208,.08);color:var(--anime);border:1px solid rgba(168,152,208,.15)}
-.b-show{background:rgba(98,176,189,.08);color:var(--show);border:1px solid rgba(98,176,189,.15)}
-.b-or{background:rgba(108,196,168,.08);color:var(--or);border:1px solid rgba(108,196,168,.15)}
-.b-run{background:rgba(92,201,138,.08);color:var(--running);border:1px solid rgba(92,201,138,.15)}
-.b-end{background:rgba(160,147,126,.06);color:var(--ended);border:1px solid rgba(160,147,126,.12)}
-.b-src{background:var(--gg);color:var(--gold2);border:1px solid var(--border)}.b-plan{background:rgba(200,200,180,.04);color:var(--faint);border:1px solid rgba(200,200,180,.08)}.b-cust{background:rgba(212,168,83,.1);color:var(--gold);border:1px solid rgba(212,168,83,.2)}
-.imdb{display:inline-flex;padding:2px 6px;border-radius:4px;background:rgba(245,197,24,.06);color:rgba(245,197,24,.55);border:1px solid rgba(245,197,24,.1);font-size:8.5px;font-family:var(--mono);font-weight:500;text-decoration:none;transition:all .15s}.imdb:hover{background:rgba(245,197,24,.15);color:#f5c518}
-.ebtn{display:inline-flex;padding:2px 6px;border-radius:4px;background:rgba(106,173,224,.06);color:rgba(106,173,224,.5);border:1px solid rgba(106,173,224,.1);font-size:8.5px;font-family:var(--mono);cursor:pointer;transition:all .15s}.ebtn:hover{background:rgba(106,173,224,.15);color:var(--watch)}
-.xbtn{display:inline-flex;padding:2px 5px;border-radius:4px;background:rgba(220,80,80,.06);color:rgba(220,80,80,.4);border:1px solid rgba(220,80,80,.08);font-size:8.5px;font-family:var(--mono);cursor:pointer}.xbtn:hover{background:rgba(220,80,80,.12);color:#dc5050}
-.dur{font-family:var(--mono);font-size:9.5px;color:var(--faint);white-space:nowrap;min-width:54px;text-align:right}
+.item:focus-within{background:var(--surface)}
+.item.s-w{border-left-color:var(--watch);background:rgba(106,173,224,.04)}
+/* done: dimmed but NEVER below the contrast floor -- opacity was .32, which broke every ratio */
+.item.s-d{border-left-color:var(--gold);background:rgba(212,168,83,.03)}
+.item.s-d .it{text-decoration:line-through;text-decoration-color:var(--muted);color:var(--muted)}
+.item.s-d .isub{color:var(--deco)}
+.item.hl{animation:pulse 1.5s var(--ease) 2;border-color:var(--gold);background:var(--gg)}
 
-/* Stats */
-.sv{display:none;padding:2rem 3rem 6rem}.sv.on{display:block}.list.off{display:none}
-.sv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.5rem}
-.sv-c{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.1rem;text-align:center}.sv-cn{font-family:var(--serif);font-size:2rem;font-weight:300}.sv-cl{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.1em}
-.sv-s{margin-bottom:1.5rem}.sv-t{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem}
-.bar-r{display:flex;align-items:center;gap:10px;margin-bottom:6px}.bar-l{font-size:11px;color:var(--text2);width:110px;text-align:right;flex-shrink:0}.bar-w{flex:1;height:14px;background:var(--surface);border-radius:3px;overflow:hidden}.bar-f{height:100%;border-radius:3px;transition:width .5s}.bar-v{font-family:var(--mono);font-size:9px;color:var(--muted);width:34px;flex-shrink:0}
-.sv-prog{width:100%;height:5px;background:var(--surface);border-radius:3px;overflow:hidden;margin-bottom:1.5rem}.sv-pf{height:100%;background:linear-gradient(90deg,var(--gold2),var(--gold));border-radius:3px}
+.inum{font-family:var(--mono);font-size:var(--fs-2xs);color:var(--muted);text-align:right;user-select:none;font-variant-numeric:tabular-nums;padding-left:var(--sp-2)}
 
-/* Modal */
-.mo-bg{display:none;position:fixed;inset:0;background:rgba(10,10,16,.8);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:100;align-items:center;justify-content:center;padding:1rem}.mo-bg.open{display:flex}
-.mo{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:1.75rem;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;box-shadow:0 32px 64px rgba(0,0,0,.5)}
-.mo h2{font-family:var(--serif);font-size:1.4rem;font-weight:400;margin-bottom:1.25rem}
-.field{margin-bottom:.85rem}.field label{display:block;font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.1em}
-.field input,.field select{width:100%;padding:8px 11px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;transition:border-color .2s}
-.field input:focus,.field select:focus{border-color:var(--gold2)}.field input::placeholder{color:var(--faint)}.field select option{background:var(--bg)}
-.fr{display:grid;grid-template-columns:1fr 1fr;gap:8px}.fn{font-size:9px;color:var(--faint);margin-top:3px;font-family:var(--mono)}
-.sr{max-height:180px;overflow-y:auto;margin-bottom:.75rem;border-radius:6px}
-.sri{display:flex;align-items:center;gap:8px;padding:7px 8px;cursor:pointer;border-radius:5px;transition:background .12s}.sri:hover{background:var(--surface2)}
-.srp{width:28px;height:42px;border-radius:3px;object-fit:cover;background:var(--surface2);flex-shrink:0}.srt{font-size:12px;color:var(--text)}.srm{font-size:10px;color:var(--muted)}
-.mbtn{display:flex;gap:8px;margin-top:1.25rem}.btn-go{flex:1;padding:9px;border-radius:7px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#1a1500;border:none;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:opacity .15s}.btn-go:hover{opacity:.88}
-.btn-x{padding:9px 14px;border-radius:7px;background:transparent;color:var(--muted);border:1px solid var(--border2);font-family:var(--sans);font-size:13px;cursor:pointer}.btn-x:hover{color:var(--text);border-color:var(--border3)}
+/* the status toggle IS the main row area -- a real button, so it is keyboard operable.
+   nothing interactive is nested inside it. */
+.itog{
+  display:flex;align-items:center;gap:var(--sp-3);min-width:0;width:100%;
+  background:none;border:none;cursor:pointer;text-align:left;color:inherit;
+  padding:var(--sp-3) 0;font:inherit;
+}
+.ichk{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--muted);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background var(--dur) var(--ease),border-color var(--dur) var(--ease)}
+.ichk .ico{width:12px;height:12px;opacity:0;transition:opacity var(--dur-fast) var(--ease)}
+.item.s-w .ichk{border-color:var(--watch);background:rgba(106,173,224,.18);color:var(--watch)}
+.item.s-w .ichk .i-play{opacity:1}
+.item.s-d .ichk{background:var(--gold);border-color:var(--gold);color:#1a1500}
+.item.s-d .ichk .i-check{opacity:1}
+.iinfo{min-width:0;flex:1}
+.it{font-size:var(--fs-base);font-weight:400;color:var(--text);line-height:1.35;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.isub{font-size:var(--fs-xs);color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:350}
 
-.footer{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(180deg,transparent,var(--bg) 40%);padding:1.5rem 3rem .7rem;display:flex;align-items:flex-end;justify-content:space-between;font-size:10px;color:var(--muted);pointer-events:none}.footer *{pointer-events:auto}.footer strong{color:var(--gold);font-family:var(--mono);font-weight:500}
-.legend{display:flex;gap:10px;font-family:var(--mono);font-size:9px}.legend span{display:flex;align-items:center;gap:3px}.ld{width:6px;height:6px;border-radius:2px;display:inline-block}
-@media(max-width:640px){.hero{padding:1.5rem 1rem 1.25rem}.hero h1{font-size:2.2rem}.ctrl,.list,.sv,.footer{padding-left:1rem;padding-right:1rem}.stats-row{gap:.75rem}.stat-n{font-size:1.6rem}.item{grid-template-columns:22px 1fr auto;padding:8px 6px}.b-src,.b-plan,.b-or,.b-cust,.badge.b-run,.badge.b-end{display:none}.filters{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}.filters::-webkit-scrollbar{display:none}.sv-grid{grid-template-columns:repeat(2,1fr)}}
+.imeta{display:flex;align-items:center;gap:var(--sp-2);flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;padding:var(--sp-2) var(--sp-3) var(--sp-2) 0}
 
-/* Passcode lock */
-body.locked>*:not(#lockScreen){display:none}
-.lock{position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:1rem}
-.lock-box{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:2rem 1.75rem;width:100%;max-width:300px;text-align:center;box-shadow:0 32px 64px rgba(0,0,0,.5)}
-.lock-icon{font-size:2rem;margin-bottom:.5rem}
-.lock-box h2{font-family:var(--serif);font-size:1.3rem;font-weight:400;margin-bottom:1.25rem;color:var(--text)}
-.lock-box input{width:100%;padding:12px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:1.4rem;text-align:center;letter-spacing:.5em;outline:none;box-sizing:border-box}
-.lock-box input:focus{border-color:var(--gold2)}
-.lock-err{color:var(--movie);font-size:11px;margin-top:8px;height:14px;font-family:var(--mono)}
+/* episode stepper -- 28px targets (was 15px, below the WCAG 2.2 AA 24px floor) */
+.ep-t{display:inline-flex;align-items:center;gap:var(--sp-1);padding:2px;border-radius:6px;background:rgba(106,173,224,.10);border:1px solid rgba(106,173,224,.22)}
+.ep-n{font-family:var(--mono);font-size:var(--fs-xs);color:var(--watch);min-width:44px;text-align:center;font-variant-numeric:tabular-nums}
+.epb{width:var(--tap-min);height:var(--tap-min);border-radius:5px;border:none;background:transparent;color:var(--watch);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--dur-fast) var(--ease)}
+.epb:hover:not([disabled]){background:rgba(106,173,224,.18)}
+.epb[disabled]{opacity:.35;cursor:not-allowed}
+.epb .ico{width:13px;height:13px;stroke-width:2.25}
+
+.badge{font-size:var(--fs-2xs);padding:3px var(--sp-2);border-radius:5px;font-family:var(--mono);letter-spacing:.03em;font-weight:500;white-space:nowrap;line-height:1.4}
+.b-movie{background:rgba(216,128,96,.10);color:var(--movie);border:1px solid rgba(216,128,96,.22)}
+.b-anime{background:rgba(168,152,208,.10);color:var(--anime);border:1px solid rgba(168,152,208,.22)}
+.b-show{background:rgba(98,176,189,.10);color:var(--show);border:1px solid rgba(98,176,189,.22)}
+.b-or{background:rgba(108,196,168,.10);color:var(--or);border:1px solid rgba(108,196,168,.22)}
+.b-run{background:rgba(92,201,138,.10);color:var(--running);border:1px solid rgba(92,201,138,.22)}
+.b-end{background:rgba(160,147,126,.10);color:var(--ended);border:1px solid rgba(160,147,126,.22)}
+.b-src{background:var(--gg);color:var(--gold2);border:1px solid var(--border)}
+.b-plan{background:rgba(200,200,180,.05);color:var(--muted);border:1px solid rgba(200,200,180,.12)}
+.b-cust{background:var(--gg2);color:var(--gold);border:1px solid var(--border3)}
+
+.iact{width:var(--tap-min);height:var(--tap-min);display:inline-flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid transparent;background:transparent;cursor:pointer;transition:background var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease)}
+.iact .ico{width:14px;height:14px}
+.a-imdb{color:var(--imdb);text-decoration:none;border-color:rgba(245,197,24,.18);background:rgba(245,197,24,.07)}
+.a-imdb:hover{background:rgba(245,197,24,.18)}
+.a-edit{color:var(--watch);border-color:rgba(106,173,224,.18);background:rgba(106,173,224,.07)}
+.a-edit:hover{background:rgba(106,173,224,.18)}
+.a-del{color:var(--danger);border-color:rgba(232,115,107,.18);background:rgba(232,115,107,.07)}
+.a-del:hover{background:rgba(232,115,107,.18)}
+.dur{font-family:var(--mono);font-size:var(--fs-xs);color:var(--text2);white-space:nowrap;min-width:62px;text-align:right;font-variant-numeric:tabular-nums}
+
+.empty{padding:var(--sp-8) var(--sp-4);text-align:center;color:var(--muted);font-family:var(--serif);font-size:var(--fs-lg)}
+.empty p{font-family:var(--sans);font-size:var(--fs-sm);margin-top:var(--sp-2)}
+
+/* ============ stats view ============ */
+.sv{display:none;padding:var(--sp-6) var(--gutter) var(--sp-8);max-width:1600px;margin:0 auto}
+.sv.on{display:block}.list.off{display:none}
+.sv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--sp-3);margin-bottom:var(--sp-6)}
+.sv-c{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--sp-5);text-align:center}
+.sv-cn{font-family:var(--serif);font-size:var(--fs-xl);font-weight:400;font-variant-numeric:tabular-nums}
+.sv-cl{font-family:var(--mono);font-size:var(--fs-2xs);color:var(--muted);margin-top:var(--sp-1);text-transform:uppercase;letter-spacing:.1em}
+.sv-s{margin-bottom:var(--sp-6)}
+.sv-t{font-family:var(--mono);font-size:var(--fs-2xs);color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:var(--sp-3)}
+.bar-r{display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-2)}
+.bar-l{font-size:var(--fs-xs);color:var(--text2);width:120px;text-align:right;flex-shrink:0}
+.bar-w{flex:1;height:16px;background:var(--surface);border-radius:3px;overflow:hidden}
+.bar-f{height:100%;border-radius:3px;transition:width var(--dur-slow) var(--ease)}
+.bar-v{font-family:var(--mono);font-size:var(--fs-2xs);color:var(--text2);width:40px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.sv-prog{width:100%;height:6px;background:var(--surface);border-radius:3px;overflow:hidden;margin-bottom:var(--sp-6)}
+.sv-pf{height:100%;background:linear-gradient(90deg,var(--gold2),var(--gold));border-radius:3px}
+
+/* ============ modal ============ */
+.mo-bg{display:none;position:fixed;inset:0;background:rgba(10,10,16,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:var(--z-modal);align-items:center;justify-content:center;padding:var(--sp-4)}
+.mo-bg.open{display:flex}
+.mo{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:var(--sp-6);width:100%;max-width:480px;max-height:min(90dvh,760px);overflow-y:auto;box-shadow:0 32px 64px rgba(0,0,0,.55)}
+.mo-h{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-3);margin-bottom:var(--sp-5)}
+.mo h2{font-family:var(--serif);font-size:var(--fs-xl);font-weight:400;line-height:1.2}
+.mo-x{width:var(--tap-min);height:var(--tap-min);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius);border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer}
+.mo-x:hover{background:var(--surface2);color:var(--text)}
+.mo-x .ico{width:15px;height:15px}
+.field{margin-bottom:var(--sp-4)}
+.field label{display:block;font-family:var(--mono);font-size:var(--fs-2xs);color:var(--muted);margin-bottom:var(--sp-1);text-transform:uppercase;letter-spacing:.1em}
+.req{color:var(--gold)}
+/* 16px prevents iOS Safari auto-zoom on focus */
+.field input,.field select{width:100%;min-height:var(--tap);padding:var(--sp-2) var(--sp-3);background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:16px;outline:none;transition:border-color var(--dur) var(--ease)}
+.field input:focus-visible,.field select:focus-visible{border-color:var(--gold2)}
+.field input::placeholder{color:var(--muted);opacity:.8}
+.field select option{background:var(--bg)}
+.field input[aria-invalid=true]{border-color:var(--danger)}
+.err{display:flex;align-items:center;gap:var(--sp-1);color:var(--danger);font-size:var(--fs-xs);margin-top:var(--sp-1);min-height:1em}
+.err .ico{width:12px;height:12px}
+.err:empty{display:none}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3)}
+.fn{font-size:var(--fs-2xs);color:var(--muted);margin-top:var(--sp-1);font-family:var(--mono)}
+.sr{max-height:220px;overflow-y:auto;margin-top:var(--sp-2);border-radius:var(--radius)}
+.sr:empty{display:none}
+.sri{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2);cursor:pointer;border-radius:6px;width:100%;background:none;border:1px solid transparent;text-align:left;color:inherit;min-height:var(--tap)}
+.sri:hover{background:var(--surface2)}
+.srp{width:32px;height:48px;border-radius:3px;object-fit:cover;background:var(--surface2);flex-shrink:0}
+.srt{font-size:var(--fs-sm);color:var(--text)}
+.srm{font-size:var(--fs-xs);color:var(--muted);font-family:var(--mono)}
+.mbtn{display:flex;gap:var(--sp-3);margin-top:var(--sp-5)}
+.btn-go{flex:1;min-height:var(--tap);padding:var(--sp-3);border-radius:var(--radius);background:linear-gradient(135deg,var(--gold2),var(--gold));color:#1a1500;border:none;font-size:var(--fs-sm);font-weight:600;cursor:pointer;transition:filter var(--dur) var(--ease)}
+.btn-go:hover{filter:brightness(1.08)}
+.btn-x{min-height:var(--tap);padding:var(--sp-3) var(--sp-5);border-radius:var(--radius);background:transparent;color:var(--muted);border:1px solid var(--border2);font-size:var(--fs-sm);cursor:pointer}
+.btn-x:hover{color:var(--text);border-color:var(--border3)}
+.btn-danger{background:var(--danger);color:#fff;border:none;font-weight:600}
+.btn-danger:hover{filter:brightness(1.08)}
+
+/* confirm dialog -- replaces window.confirm(), which blocks the page */
+.cf{max-width:400px}
+.cf p{color:var(--text2);font-size:var(--fs-sm);margin-bottom:var(--sp-2);line-height:1.6}
+
+/* ============ toasts -- replace alert() ============ */
+.toasts{position:fixed;bottom:calc(var(--sp-8) + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:var(--z-toast);display:flex;flex-direction:column;gap:var(--sp-2);align-items:center;pointer-events:none;width:calc(100% - var(--sp-8));max-width:440px}
+.toast{pointer-events:auto;display:flex;align-items:center;gap:var(--sp-3);background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:var(--sp-3) var(--sp-4);box-shadow:0 12px 32px rgba(0,0,0,.45);font-size:var(--fs-sm);color:var(--text);animation:fadeUp var(--dur) var(--ease);width:100%}
+.toast .ico{width:16px;height:16px}
+.toast.ok{border-color:rgba(92,201,138,.4)}.toast.ok .ico{color:var(--running)}
+.toast.err{border-color:rgba(232,115,107,.4)}.toast.err .ico{color:var(--danger)}
+.toast.info .ico{color:var(--gold)}
+.toast-msg{flex:1;min-width:0}
+.toast-act{min-height:var(--tap-min);padding:var(--sp-1) var(--sp-3);border-radius:6px;background:var(--gg);border:1px solid var(--border3);color:var(--gold);font-size:var(--fs-xs);font-weight:600;cursor:pointer;flex-shrink:0}
+.toast-act:hover{background:var(--gg2)}
+
+/* ============ footer ============ */
+.footer{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(180deg,transparent,var(--bg) 45%);padding:var(--sp-6) var(--gutter) calc(var(--sp-2) + env(safe-area-inset-bottom));display:flex;align-items:flex-end;justify-content:space-between;gap:var(--sp-4);font-size:var(--fs-xs);color:var(--muted);pointer-events:none;z-index:10}
+.footer *{pointer-events:auto}
+.footer strong{color:var(--gold);font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:var(--sp-3);font-family:var(--mono);font-size:var(--fs-2xs);flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:var(--sp-1)}
+.ld{width:7px;height:7px;border-radius:2px;display:inline-block;flex-shrink:0}
+
+/* ============ lock ============ */
+.lock{position:fixed;inset:0;z-index:var(--z-lock);background:var(--bg);display:flex;align-items:center;justify-content:center;padding:var(--sp-4)}
+.lock-box{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:var(--sp-7) var(--sp-6);width:100%;max-width:320px;text-align:center;box-shadow:0 32px 64px rgba(0,0,0,.5)}
+.lock-icon{color:var(--gold);margin:0 auto var(--sp-3)}
+.lock-icon .ico{width:32px;height:32px;margin:0 auto}
+.lock-box h1{font-family:var(--serif);font-size:var(--fs-xl);font-weight:400;margin-bottom:var(--sp-5);color:var(--text)}
+.lock-box input{width:100%;min-height:var(--tap);padding:var(--sp-3);background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:var(--mono);font-size:24px;text-align:center;letter-spacing:.5em;text-indent:.5em;outline:none}
+.lock-box input:focus-visible{border-color:var(--gold2)}
+.lock-err{color:var(--danger);font-size:var(--fs-xs);margin-top:var(--sp-2);min-height:18px;font-family:var(--mono)}
+body.locked>*:not(#lockScreen):not(.toasts){display:none}
+
+/* ============ responsive ============ */
+@media(max-width:900px){
+  .hero{padding-top:var(--sp-6);padding-bottom:var(--sp-5)}
+  .hero-top{flex-direction:column;gap:var(--sp-4)}
+  .stats-row{gap:var(--sp-5);width:100%;justify-content:space-between}
+  .stat{text-align:left}
+}
+@media(max-width:640px){
+  :root{--fs-3xl:30px;--fs-2xl:24px;--fs-xl:19px}
+  .hero h1{line-height:1.1}
+  .item{grid-template-columns:22px minmax(0,1fr);row-gap:0}
+  /* meta moves to its own row instead of being display:none -- the old build
+     hid Plan/OR/Rec/Running/Ended badges entirely on mobile, losing the data */
+  .imeta{grid-column:1/-1;justify-content:flex-start;padding:0 var(--sp-2) var(--sp-3) var(--sp-3);gap:var(--sp-1) var(--sp-2)}
+  .itog{padding-bottom:var(--sp-2)}
+  .dur{min-width:auto;margin-left:auto}
+  .filters{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+  .filters::-webkit-scrollbar{display:none}
+  .fb{flex-shrink:0}
+  .ctrl{gap:var(--sp-2)}
+  .footer{font-size:var(--fs-2xs)}
+  .legend{display:none}
+  .fr{grid-template-columns:1fr}
+  .bar-l{width:88px}
+}
+
+/* ============ reduced motion ============ */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+  .item{animation:none}
+  html{scroll-behavior:auto}
+}
+@media(prefers-contrast:more){
+  :root{--muted:#c4bfb2;--border:rgba(212,168,83,.3);--border2:rgba(212,168,83,.45)}
+  .item{border-color:var(--border)}
+}
 </style>
 </head>
 <body class="locked">
-<div class="lock" id="lockScreen"><div class="lock-box">
-  <div class="lock-icon">🔒</div>
-  <h2>Enter Passcode</h2>
-  <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="lockInput" autocomplete="off">
-  <div class="lock-err" id="lockErr"></div>
-  <button class="btn-go" id="lockBtn" style="margin-top:10px">Unlock</button>
-</div></div>
+
+<!-- ===== icon sprite: replaces every emoji. one family, one stroke width. ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10.5" width="16" height="10.5" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/><circle cx="12" cy="15.8" r="1.2" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M7.5 5.2 19 12 7.5 18.8Z" fill="currentColor"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+<symbol id="i-dice" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11.5A8 8 0 1 0 18 17"/><path d="M20 5v6.5h-6.5"/></symbol>
+<symbol id="i-export" viewBox="0 0 24 24"><path d="M12 3.5v11M8 11l4 3.5 4-3.5"/><path d="M4.5 16.5v2a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2"/></symbol>
+<symbol id="i-import" viewBox="0 0 24 24"><path d="M12 14.5v-11M8 7l4-3.5L16 7"/><path d="M4.5 16.5v2a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2"/></symbol>
+<symbol id="i-pencil" viewBox="0 0 24 24"><path d="M16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1 1-4Z"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 6.5h16M9 6.5V4.8A1.3 1.3 0 0 1 10.3 3.5h3.4A1.3 1.3 0 0 1 15 4.8v1.7"/><path d="M6.5 6.5 7.5 20a1.5 1.5 0 0 0 1.5 1.4h6a1.5 1.5 0 0 0 1.5-1.4l1-13.5"/></symbol>
+<symbol id="i-external" viewBox="0 0 24 24"><path d="M13.5 4.5H19.5V10.5"/><path d="M19.5 4.5 11 13"/><path d="M18 14.5v4a2 2 0 0 1-2 2H5.5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.8 21.5 20H2.5Z"/><path d="M12 10v4.5"/><circle cx="12" cy="17.3" r="1" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.8 2.8L16.2 9.5"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r="1" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18.5a4.5 4.5 0 0 1-.4-9A6 6 0 0 1 18 10.2a4.2 4.2 0 0 1-.6 8.3Z"/></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="8" r="4.2"/><path d="M11 11 20 20M17.5 17.5l-2 2M20.5 14.5l-2 2"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9.5 12 15.5 18 9.5"/></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M4 11.5A8 8 0 1 1 6 17"/><path d="M4 5v6.5h6.5"/></symbol>
+</defs></svg>
+
+<!-- ===== passcode gate ===== -->
+<div class="lock" id="lockScreen" role="dialog" aria-modal="true" aria-labelledby="lockTitle">
+  <div class="lock-box">
+    <div class="lock-icon"><svg class="ico" aria-hidden="true"><use href="#i-lock"/></svg></div>
+    <h1 id="lockTitle">Enter passcode</h1>
+    <label class="vh" for="lockInput">4-digit passcode</label>
+    <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="lockInput"
+           autocomplete="current-password" aria-describedby="lockErr">
+    <div class="lock-err" id="lockErr" role="alert"></div>
+    <button class="btn-go" id="lockBtn" style="margin-top:12px">Unlock</button>
+  </div>
+</div>
 <script>
 (function(){
+  // factory default. a passcode set via Change passcode is stored as wlHash
+  // (locally + in Firestore) and takes precedence over this.
   const LOCK_HASH='ed946f65d2c785d90e827c5ffd879ce3b49c68d4c88013074176a7e73bc58bcf';
+  const activeHash=()=>localStorage.getItem('wlHash')||LOCK_HASH;
   async function sha256(s){
     if(!(window.crypto&&crypto.subtle))throw new Error('no-subtlecrypto');
     const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
     return[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('')
   }
-  function unlock(){document.body.classList.remove('locked');document.getElementById('lockScreen').style.display='none'}
+  // shared with the module script so the change-passcode dialog uses one implementation
+  window.__wlCrypto={sha256,activeHash};
+  function unlock(){
+    document.body.classList.remove('locked');
+    document.getElementById('lockScreen').style.display='none';
+    const s=document.getElementById('skip');if(s)s.focus();
+  }
   if(localStorage.getItem('wlUnlocked')==='1'){unlock();return}
   const li=document.getElementById('lockInput'),err=document.getElementById('lockErr'),btn=document.getElementById('lockBtn');
   li.focus();
   async function tryUnlock(){
-    if(li.value.length!==4)return;
+    if(li.value.length!==4){err.textContent='Enter all 4 digits.';return}
     try{
       const h=await sha256(li.value);
-      if(h===LOCK_HASH){localStorage.setItem('wlUnlocked','1');unlock()}
+      if(h===activeHash()){localStorage.setItem('wlUnlocked','1');unlock()}
       else{err.textContent='Incorrect code';li.value='';li.focus()}
-    }catch(e){err.textContent='Browser blocked secure check — try https or a different browser';console.error(e)}
+    }catch(e){err.textContent='Secure check blocked — try https or another browser';console.error(e)}
   }
   li.addEventListener('input',()=>{li.value=li.value.replace(/\D/g,'').slice(0,4);err.textContent='';if(li.value.length===4)tryUnlock()});
   li.addEventListener('keydown',e=>{if(e.key==='Enter')tryUnlock()});
   btn.addEventListener('click',tryUnlock);
 })();
 </script>
-<div class="hero"><div class="hero-top"><div>
-  <h1>The <em>master</em> watchlist</h1>
-  <p class="hero-sub">Click to cycle status · Track episodes · OMDB search when adding</p>
-  <div class="sync" id="sync">⏳ Connecting…</div>
-</div><div class="stats-row">
-  <div class="stat"><div class="stat-n" id="sT">—</div><div class="stat-l">Titles</div></div>
-  <div class="stat"><div class="stat-n gold" id="sD">0</div><div class="stat-l">Done</div></div>
-  <div class="stat"><div class="stat-n blue" id="sW">0</div><div class="stat-l">Watching</div></div>
-  <div class="stat"><div class="stat-n" id="sH">—</div><div class="stat-l">Hrs left</div></div>
-</div></div></div>
 
-<div class="ctrl"><div class="filters">
-  <button class="fb on" onclick="W.fil('all',this)">All</button>
-  <button class="fb f-movie" onclick="W.fil('movie',this)">Movies</button>
-  <button class="fb f-anime" onclick="W.fil('anime',this)">Anime</button>
-  <button class="fb f-show" onclick="W.fil('show',this)">Shows</button>
-  <button class="fb f-or" onclick="W.fil('or',this)">OR/EM</button>
-  <button class="fb f-w" onclick="W.fil('watching',this)">Watching</button>
-  <button class="fb f-d" onclick="W.fil('done',this)">Done</button>
-</div><div class="cr">
-  <button class="ibtn" onclick="W.rand()" title="Random pick">🎲</button>
-  <button class="ibtn" onclick="W.togSV()" title="Stats">📊</button>
-  <button class="ibtn" onclick="W.enrichAll()" title="Enrich all IMDB links" id="enrBtn">🔄</button>
-  <button class="ibtn" onclick="W.exportJSON()" title="Backup as JSON">📥</button>
-  <button class="ibtn" onclick="document.getElementById('impF').click()" title="Restore from JSON">📤</button>
-  <input type="file" id="impF" accept="application/json" style="display:none" onchange="W.importJSON(this)">
-  <button class="abtn" onclick="W.openM()">+ Add</button>
-  <div class="pw"><div class="pb"><div class="pfi" id="pf"></div></div><span class="pt" id="ptx">0/—</span></div>
-</div></div>
+<a href="#main" class="skip" id="skip">Skip to watchlist</a>
 
-<div class="list" id="list"></div>
-<div class="sv" id="svw"></div>
+<header class="hero">
+  <div class="hero-top">
+    <div>
+      <h1>The <em>master</em> watchlist</h1>
+      <p class="hero-sub">Click a row to cycle plan &rarr; watching &rarr; done. Track episodes, search OMDb when adding.</p>
+      <div class="sync" id="sync" role="status" aria-live="polite">
+        <svg class="ico" aria-hidden="true"><use href="#i-cloud"/></svg><span id="syncTxt">Connecting&hellip;</span>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-n" id="sT">&mdash;</div><div class="stat-l">Titles</div></div>
+      <div class="stat"><div class="stat-n gold" id="sD">0</div><div class="stat-l">Done</div></div>
+      <div class="stat"><div class="stat-n blue" id="sW">0</div><div class="stat-l">Watching</div></div>
+      <div class="stat"><div class="stat-n" id="sH">&mdash;</div><div class="stat-l">Hrs left</div></div>
+    </div>
+  </div>
+</header>
 
-<div class="footer">
-  <div class="legend"><span><span class="ld" style="background:var(--faint)"></span>Plan</span><span><span class="ld" style="background:var(--watch)"></span>Watching</span><span><span class="ld" style="background:var(--gold)"></span>Done</span><span><span class="ld" style="background:var(--running)"></span>Running</span><span><span class="ld" style="background:var(--ended)"></span>Ended</span></div>
-  <span>Remaining: <strong id="ft">…</strong></span>
+<div class="ctrl">
+  <div class="filters" role="group" aria-label="Filter watchlist by type and status">
+    <button class="fb" data-f="all"      aria-pressed="true">All</button>
+    <button class="fb f-movie" data-f="movie"    aria-pressed="false">Movies</button>
+    <button class="fb f-anime" data-f="anime"    aria-pressed="false">Anime</button>
+    <button class="fb f-show"  data-f="show"     aria-pressed="false">Shows</button>
+    <button class="fb f-or"    data-f="or"       aria-pressed="false">OR/EM</button>
+    <button class="fb f-w"     data-f="watching" aria-pressed="false">Watching</button>
+    <button class="fb f-d"     data-f="done"     aria-pressed="false">Done</button>
+  </div>
+  <div class="cr">
+    <div class="gsel" id="gsel">
+      <label class="vh" for="genreF">Filter by genre</label>
+      <select id="genreF"><option value="">All genres</option></select>
+      <svg class="ico chev" aria-hidden="true"><use href="#i-chev"/></svg>
+    </div>
+    <button class="gclr" id="gclr" aria-label="Clear genre filter"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg></button>
+    <button class="ibtn" id="randBtn" aria-label="Pick a random unwatched title"><svg class="ico" aria-hidden="true"><use href="#i-dice"/></svg></button>
+    <button class="ibtn" id="svBtn" aria-label="Show statistics" aria-pressed="false"><svg class="ico" aria-hidden="true"><use href="#i-chart"/></svg></button>
+    <button class="ibtn" id="enrBtn" aria-label="Fetch IMDb links for all titles"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+    <button class="ibtn" id="expBtn" aria-label="Back up watchlist as JSON"><svg class="ico" aria-hidden="true"><use href="#i-export"/></svg></button>
+    <button class="ibtn" id="impBtn" aria-label="Restore watchlist from JSON backup"><svg class="ico" aria-hidden="true"><use href="#i-import"/></svg></button>
+    <input type="file" id="impF" accept="application/json" class="vh">
+    <button class="ibtn" id="pinBtn" aria-label="Change passcode"><svg class="ico" aria-hidden="true"><use href="#i-key"/></svg></button>
+    <button class="abtn" id="addBtn"><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg>Add title</button>
+    <div class="pw">
+      <div class="pb" role="progressbar" id="pbar" aria-label="Completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="pfi" id="pf"></div></div>
+      <span class="pt" id="ptx">0/&mdash;</span>
+    </div>
+  </div>
 </div>
 
-<div class="mo-bg" id="modal" onclick="if(event.target===this)W.closeM()">
-<div class="mo"><h2 id="mTitle">Add a title</h2>
-  <div class="field"><label>Search OMDB</label><input type="text" id="mS" placeholder="Type a title…" oninput="W.dSearch(this.value)"><div class="sr" id="sr"></div></div>
-  <div class="field"><label>Title</label><input type="text" id="mTi" placeholder="Title"></div>
-  <div class="fr"><div class="field"><label>Type</label><select id="mTy" onchange="W.tyC()"><option value="movie">Movie</option><option value="show">Show</option><option value="anime">Anime</option></select></div>
-  <div class="field"><label>Category</label><select id="mTg"><option value="personal">Personal</option><option value="planned">Planned</option><option value="rec">Recommended</option><option value="or">OR / EM</option></select></div></div>
-  <div class="field"><label>Genre</label><input type="text" id="mGe" placeholder="e.g. Crime / Thriller"></div>
-  <div class="fr"><div class="field"><label id="mDL">Runtime (min)</label><input type="number" id="mMi" placeholder="120" min="1"><div class="fn" id="mDN">Total minutes</div></div>
-  <div class="field" id="mEW" style="display:none"><label>Episodes</label><input type="number" id="mEp" placeholder="24" min="1"></div></div>
-  <div class="field"><label>Extra info</label><input type="text" id="mSu" placeholder="Netflix · 2024 · Cast"></div>
-  <input type="hidden" id="mImdb"><input type="hidden" id="mEdit" value="">
-  <div class="mbtn"><button class="btn-x" onclick="W.closeM()">Cancel</button><button class="btn-go" onclick="W.submit()">Save</button></div>
+<main class="list" id="main" tabindex="-1"></main>
+<section class="sv" id="svw" aria-label="Statistics"></section>
+
+<!-- announcements for status changes; never steals focus -->
+<div class="vh" id="live" role="status" aria-live="polite"></div>
+
+<footer class="footer">
+  <div class="legend">
+    <span><span class="ld" style="background:var(--muted)"></span>Plan</span>
+    <span><span class="ld" style="background:var(--watch)"></span>Watching</span>
+    <span><span class="ld" style="background:var(--gold)"></span>Done</span>
+    <span><span class="ld" style="background:var(--running)"></span>Running</span>
+    <span><span class="ld" style="background:var(--ended)"></span>Ended</span>
+  </div>
+  <span>Remaining: <strong id="ft">&hellip;</strong></span>
+</footer>
+
+<div class="toasts" id="toasts"></div>
+
+<!-- ===== add / edit modal ===== -->
+<div class="mo-bg" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle" hidden>
+<div class="mo">
+  <div class="mo-h">
+    <h2 id="mTitle">Add a title</h2>
+    <button class="mo-x" id="mClose" aria-label="Close dialog"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg></button>
+  </div>
+  <form id="mForm" novalidate>
+    <div class="field">
+      <label for="mS">Search OMDb</label>
+      <input type="text" id="mS" placeholder="Type a title to autofill&hellip;" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="sr" aria-describedby="srHint">
+      <div class="fn" id="srHint">Optional &mdash; fills the fields below for you</div>
+      <div class="sr" id="sr" role="listbox" aria-label="OMDb search results"></div>
+    </div>
+    <div class="field">
+      <label for="mTi">Title <span class="req" aria-hidden="true">*</span></label>
+      <input type="text" id="mTi" placeholder="Title" required aria-describedby="eTi">
+      <div class="err" id="eTi" role="alert"></div>
+    </div>
+    <div class="fr">
+      <div class="field"><label for="mTy">Type</label>
+        <select id="mTy"><option value="movie">Movie</option><option value="show">Show</option><option value="anime">Anime</option></select>
+      </div>
+      <div class="field"><label for="mTg">Category</label>
+        <select id="mTg"><option value="personal">Personal</option><option value="planned">Planned</option><option value="rec">Recommended</option><option value="or">OR / EM</option></select>
+      </div>
+    </div>
+    <div class="field"><label for="mGe">Genre</label><input type="text" id="mGe" placeholder="e.g. Crime / Thriller"></div>
+    <div class="fr">
+      <div class="field">
+        <label for="mMi" id="mDL">Runtime (min) <span class="req" aria-hidden="true">*</span></label>
+        <input type="number" id="mMi" placeholder="120" min="1" inputmode="numeric" required aria-describedby="mDN eMi">
+        <div class="fn" id="mDN">Total minutes</div>
+        <div class="err" id="eMi" role="alert"></div>
+      </div>
+      <div class="field" id="mEW" hidden>
+        <label for="mEp">Episodes</label>
+        <input type="number" id="mEp" placeholder="24" min="1" inputmode="numeric">
+      </div>
+    </div>
+    <div class="field"><label for="mSu">Extra info</label><input type="text" id="mSu" placeholder="Netflix &middot; 2024 &middot; Cast"></div>
+    <input type="hidden" id="mImdb"><input type="hidden" id="mEdit" value="">
+    <div class="mbtn">
+      <button type="button" class="btn-x" id="mCancel">Cancel</button>
+      <button type="submit" class="btn-go">Save</button>
+    </div>
+    <button type="button" class="mo-reset" id="mReset" hidden>Reset to the original details</button>
+  </form>
+</div></div>
+
+<!-- ===== repair shows: review before anything is written ===== -->
+<div class="mo-bg" id="repDlg" role="dialog" aria-modal="true" aria-labelledby="repTitle" hidden>
+<div class="mo">
+  <div class="mo-h">
+    <h2 id="repTitle">Fix episode data</h2>
+    <button class="mo-x" id="repClose" aria-label="Close dialog"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg></button>
+  </div>
+  <p class="rep-sum" id="repSum"></p>
+  <div class="rep-list" id="repList"></div>
+  <div class="mbtn">
+    <button type="button" class="btn-x" id="repCancel">Cancel</button>
+    <button type="button" class="btn-go" id="repApply">Apply selected</button>
+  </div>
+</div></div>
+
+<!-- ===== change passcode ===== -->
+<div class="mo-bg" id="pinDlg" role="dialog" aria-modal="true" aria-labelledby="pinTitle" hidden>
+<div class="mo cf">
+  <div class="mo-h">
+    <h2 id="pinTitle">Change passcode</h2>
+    <button class="mo-x" id="pinClose" aria-label="Close dialog"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg></button>
+  </div>
+  <form id="pinForm" novalidate>
+    <div class="field">
+      <label for="pinOld">Current passcode</label>
+      <input type="password" id="pinOld" inputmode="numeric" maxlength="4" autocomplete="current-password" aria-describedby="ePinOld">
+      <div class="err" id="ePinOld" role="alert"></div>
+    </div>
+    <div class="field">
+      <label for="pinNew">New passcode <span class="req" aria-hidden="true">*</span></label>
+      <input type="password" id="pinNew" inputmode="numeric" maxlength="4" autocomplete="new-password" aria-describedby="pinHint ePinNew">
+      <div class="fn" id="pinHint">Exactly 4 digits</div>
+      <div class="err" id="ePinNew" role="alert"></div>
+    </div>
+    <div class="field">
+      <label for="pinNew2">Confirm new passcode</label>
+      <input type="password" id="pinNew2" inputmode="numeric" maxlength="4" autocomplete="new-password" aria-describedby="ePinNew2">
+      <div class="err" id="ePinNew2" role="alert"></div>
+    </div>
+    <div class="mbtn">
+      <button type="button" class="btn-x" id="pinCancel">Cancel</button>
+      <button type="submit" class="btn-go">Update passcode</button>
+    </div>
+  </form>
+</div></div>
+
+<!-- ===== confirm dialog: replaces window.confirm(), which freezes the page ===== -->
+<div class="mo-bg" id="confirm" role="alertdialog" aria-modal="true" aria-labelledby="cfTitle" aria-describedby="cfBody" hidden>
+<div class="mo cf">
+  <div class="mo-h"><h2 id="cfTitle">Are you sure?</h2></div>
+  <p id="cfBody"></p>
+  <div class="mbtn">
+    <button type="button" class="btn-x" id="cfNo" style="flex:1">Cancel</button>
+    <button type="button" class="btn-go btn-danger" id="cfYes">Confirm</button>
+  </div>
 </div></div>
 
 <script type="module">
@@ -202,16 +604,115 @@ import{getFirestore,doc,getDoc,setDoc}from"https://www.gstatic.com/firebasejs/10
 import{getAuth,signInAnonymously,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const app=initializeApp({apiKey:"AIzaSyBrmKXcXeLMVPMDa8eR0h9ryWCsdZvKIEk",authDomain:"hussain-watchlist.firebaseapp.com",projectId:"hussain-watchlist",storageBucket:"hussain-watchlist.firebasestorage.app",messagingSenderId:"723310300304",appId:"1:723310300304:web:2a5f0cddeb321edb7a5c15"});
 const db=getFirestore(app),DR=doc(db,"watchlist","progress"),OK="d96badfe",auth=getAuth(app);
+
+const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function sy(s){const e=document.getElementById('sync'),m={saving:'⏳ Saving…',saved:'✓ Synced',error:'⚠ Offline — changes kept locally',loading:'⏳ Loading…'},c={saving:'var(--gold)',saved:'var(--running)',error:'var(--movie)',loading:'var(--gold)'};e.textContent=m[s]||'';e.style.color=c[s]||''}
-async function load(){sy('loading');try{const s=await getDoc(DR);if(s.exists()){sy('saved');const d=s.data();let st=d.statuses||{};if(d.done&&d.done.length)d.done.forEach(r=>{if(!st[r])st[r]={s:2,ep:0}});return{st,cust:d.custom||[],ca:d.cache||{}}}}catch(e){console.error('load failed',e);sy('error')}sy('saved');return{st:{},cust:[],ca:{}}}
+const icon=(n,cls='ico')=>`<svg class="${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const prefersReduced=()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- toasts: replace alert(), which blocks the page and cannot be styled ---------- */
+function toast(msg,kind='info',action){
+  const wrap=$('toasts'),t=document.createElement('div');
+  t.className='toast '+kind;
+  t.innerHTML=`${icon(kind==='ok'?'ok':kind==='err'?'alert':'info')}<span class="toast-msg">${esc(msg)}</span>`;
+  if(action){
+    const b=document.createElement('button');
+    b.className='toast-act';b.textContent=action.label;
+    b.onclick=()=>{action.fn();t.remove()};
+    t.appendChild(b);
+  }
+  wrap.appendChild(t);
+  const ms=action?8000:4000;                       // give undo time to be noticed
+  setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),200)},ms);
+  return t;
+}
+
+/* ---------- confirm dialog: replaces window.confirm() ---------- */
+let cfResolve=null;
+function confirmDlg(title,body,danger='Delete'){
+  return new Promise(res=>{
+    cfResolve=res;
+    $('cfTitle').textContent=title;$('cfBody').textContent=body;$('cfYes').textContent=danger;
+    openDlg('confirm',$('cfNo'));
+  });
+}
+
+/* ---------- dialog plumbing: focus trap + restore + Escape ---------- */
+let lastFocus=null,openDialogId=null;
+const FOCUSABLE='a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea,[tabindex]:not([tabindex="-1"])';
+function openDlg(id,focusEl){
+  lastFocus=document.activeElement;openDialogId=id;
+  const d=$(id);d.hidden=false;d.classList.add('open');
+  (focusEl||d.querySelector(FOCUSABLE))?.focus();
+}
+function closeDlg(id){
+  const d=$(id);d.classList.remove('open');d.hidden=true;
+  if(openDialogId===id)openDialogId=null;
+  lastFocus?.focus();
+}
+document.addEventListener('keydown',e=>{
+  if(!openDialogId)return;
+  if(e.key==='Escape'){
+    e.preventDefault();
+    if(openDialogId==='confirm')resolveCf(false);
+    else if(openDialogId==='modal')W.closeM();
+    else closeDlg(openDialogId);               // repDlg, pinDlg, and anything added later
+    return;
+  }
+  if(e.key!=='Tab')return;
+  const els=[...$(openDialogId).querySelectorAll(FOCUSABLE)].filter(el=>el.offsetParent!==null);
+  if(!els.length)return;
+  const first=els[0],last=els[els.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+});
+function resolveCf(v){closeDlg('confirm');cfResolve?.(v);cfResolve=null}
+
+/* ---------- sync status ---------- */
+function sy(s){
+  const m={saving:'Saving…',saved:'Synced',error:'Offline — changes kept locally',loading:'Loading…'},
+        c={saving:'var(--gold)',saved:'var(--running)',error:'var(--danger)',loading:'var(--gold)'};
+  const t=$('syncTxt');if(!t)return;
+  t.textContent=m[s]||'';$('sync').style.color=c[s]||'';
+}
+async function load(){
+  sy('loading');
+  try{
+    const s=await getDoc(DR);
+    if(s.exists()){
+      sy('saved');const d=s.data();let st=d.statuses||{};
+      if(d.done&&d.done.length)d.done.forEach(r=>{if(!st[r])st[r]={s:2,ep:0}});
+      // a passcode changed on another device wins over the local cache
+      if(d.passHash)localStorage.setItem('wlHash',d.passHash);
+      return{st,cust:d.custom||[],ca:d.cache||{},ov:d.overrides||{},del:d.deleted||[]}
+    }
+  }catch(e){console.error('load failed',e);sy('error')}
+  sy('saved');return{st:{},cust:[],ca:{},ov:{},del:[]}
+}
+/* Firestore rejects the whole document if any field is `undefined`, and the only
+   symptom is the small sync pill flipping to "Offline". Drop them before sending. */
+function strip(v){
+  if(Array.isArray(v))return v.map(strip);
+  if(v&&typeof v==='object'){
+    const o={};
+    for(const[k,x]of Object.entries(v))if(x!==undefined)o[k]=strip(x);
+    return o;
+  }
+  return v;
+}
 let saving=false,saveQueued=false;
 async function save(){
-  if(saving){saveQueued=true;return}
-  saving=true;sy('saving');
-  try{await setDoc(DR,{statuses:ST,custom:CI,cache:CA});sy('saved')}catch(e){console.error('save failed',e);sy('error')}
+  if(saving){saveQueued=true;return true}
+  saving=true;sy('saving');let ok=true;
+  try{
+    const payload=strip({statuses:ST,custom:CI,cache:CA,overrides:OV,deleted:DEL});
+    const ph=localStorage.getItem('wlHash');if(ph)payload.passHash=ph;
+    await setDoc(DR,payload);sy('saved')
+  }
+  catch(e){console.error('save failed',e);sy('error');ok=false}
   saving=false;
-  if(saveQueued){saveQueued=false;save()}
+  if(saveQueued){saveQueued=false;return save()}
+  return ok;
 }
 
 const B=[
@@ -298,154 +799,660 @@ const B=[
 {rank:54,title:"The Office (US)",sub:"NBC · 201 eps",type:"show",genre:"Comedy / Mockumentary",mins:4422,tag:"rec",eps:201},
 ];
 
-let ST={},CI=[],CA={},AF='all',showSV=false;
-const all=()=>[...B,...CI];
+let ST={},CI=[],CA={},AF='all',GF='',showSV=false;
+/* OV  = per-rank overrides applied on top of the built-in B[] array, so the 81
+        seeded titles are editable without touching the source data.
+   DEL = soft-deleted ranks (built-in or custom). Reversible, hence undo. */
+let OV={},DEL=[],DELS=new Set();
+const syncDel=()=>{DELS=new Set(DEL)};
+const merged=d=>OV[d.rank]?{...d,...OV[d.rank]}:d;
+const all=()=>[...B.map(merged),...CI].filter(d=>!DELS.has(d.rank));
+const isBuiltIn=r=>B.some(d=>d.rank===r);
 const gs=r=>ST[r]||{s:0,ep:0};
 const fD=(m,e)=>{const h=Math.floor(m/60),r=m%60;return e?`${e}ep · ${h}h${r?r+'m':''}`:`${h}h${r}m`};
 const fH=m=>m>1440?`${(m/1440).toFixed(1)}d`:`${Math.floor(m/60)}h${m%60}m`;
-function mf(d){const s=gs(d.rank);if(AF==='all')return true;if(AF==='movie')return d.type==='movie';if(AF==='anime')return d.type==='anime';if(AF==='show')return d.type==='show';if(AF==='or')return d.or;if(AF==='watching')return s.s===1;if(AF==='done')return s.s===2;return true}
+const SLAB=['Plan','Watching','Done'];
+/* seeded titles use "Crime / Thriller"; OMDb-filled ones use "Animation, Action, Adventure".
+   split on both, or comma lists collapse into one bogus genre. */
+const genresOf=d=>(d.genre||'').split(/\s*[,/]\s*/).map(g=>g.trim()).filter(Boolean);
+/* two independent axes: type/status AND genre, so "Anime + Action" works */
+function mf(d){
+  if(GF&&!genresOf(d).includes(GF))return false;
+  const s=gs(d.rank);
+  if(AF==='all')return true;if(AF==='movie')return d.type==='movie';if(AF==='anime')return d.type==='anime';
+  if(AF==='show')return d.type==='show';if(AF==='or')return d.or;if(AF==='watching')return s.s===1;
+  if(AF==='done')return s.s===2;return true}
+
+/* rebuilt whenever titles change, since editing can introduce or retire a genre */
+function fillGenres(){
+  const sel=$('genreF'),prev=GF,counts={};
+  all().forEach(d=>genresOf(d).forEach(g=>counts[g]=(counts[g]||0)+1));
+  const list=Object.entries(counts).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+  sel.innerHTML='<option value="">All genres</option>'+
+    list.map(([g,c])=>`<option value="${esc(g)}">${esc(g)} (${c})</option>`).join('');
+  // a genre can disappear after an edit — fall back to All rather than filtering to nothing
+  GF=counts[prev]?prev:'';
+  sel.value=GF;
+  $('gsel').classList.toggle('on',!!GF);
+}
 const tiers=[{l:'Under 2h',x:120},{l:'2–8 hours',x:480},{l:'8–20 hours',x:1200},{l:'20–50 hours',x:3000},{l:'50+ hours',x:1/0}];
+const announce=m=>{$('live').textContent=m};
 
+/* ---------------- row markup ---------------- */
+function rowHTML(d,n,delay){
+  const s=gs(d.rank),dn=s.s===2,wt=s.s===1,sc=dn?' s-d':wt?' s-w':'',c=CA[d.rank]||{};
+  const href=c.id?`https://www.imdb.com/title/${c.id}/`:`https://www.imdb.com/find/?q=${encodeURIComponent(d.title)}`;
+  const tC=d.type==='movie'?'b-movie':d.type==='anime'?'b-anime':'b-show';
+  const edited=!d.custom&&OV[d.rank];
+  const sC=d.custom||edited?'b-cust':d.tag==='planned'?'b-plan':'b-src';
+  // tag 'or' already renders its own OR badge below — don't print it twice.
+  // '' means no source badge at all, rather than a meaningless lone dash.
+  const sL=d.custom?'Added':edited?'Edited':d.tag==='planned'?'Plan':d.tag==='rec'?'Rec':'';
+  let extra='';
+  if(d.or)extra+='<span class="badge b-or">OR</span>';
+  if(c.status==='running')extra+='<span class="badge b-run">Running</span>';
+  else if(c.status==='ended')extra+='<span class="badge b-end">Ended</span>';
+
+  // episode stepper — 28px targets, disabled at bounds
+  let epH='';
+  if(wt&&d.eps){
+    const cur=s.ep||0;
+    epH=`<span class="ep-t">
+      <button class="epb" data-act="epD" data-r="${d.rank}" aria-label="One less episode of ${esc(d.title)}"${cur<=0?' disabled':''}>${icon('minus')}</button>
+      <span class="ep-n" aria-label="${cur} of ${d.eps} episodes watched">${cur}/${d.eps}</span>
+      <button class="epb" data-act="epI" data-r="${d.rank}" aria-label="One more episode of ${esc(d.title)}"${cur>=d.eps?' disabled':''}>${icon('plus')}</button>
+    </span>`;
+  }
+  // every title is editable and deletable now, seeded ones included
+  const editB=`<button class="iact a-edit" data-act="edit" data-r="${d.rank}" aria-label="Edit ${esc(d.title)}">${icon('pencil')}</button>`;
+  const delB=`<button class="iact a-del" data-act="del" data-r="${d.rank}" aria-label="Delete ${esc(d.title)}">${icon('trash')}</button>`;
+
+  const srcB=sL?`<span class="badge ${sC}">${sL}</span>`:'';
+  return `<div class="item${sc}" id="i-${d.rank}" role="listitem" style="animation-delay:${delay}s">
+    <span class="inum" aria-hidden="true">${n}</span>
+    <button class="itog" data-act="tog" data-r="${d.rank}" data-eps="${d.eps?1:0}">
+      <span class="ichk" aria-hidden="true">${icon('check','ico i-check')}${icon('play','ico i-play')}</span>
+      <span class="iinfo">
+        <span class="it">${esc(d.title)}</span>
+        <span class="isub">${esc(d.sub||'')}${d.genre?' · '+esc(d.genre):''}</span>
+      </span>
+      <span class="vh" data-st>Status: ${SLAB[s.s]}. Runtime ${fD(d.mins,d.eps)}.</span>
+    </button>
+    <div class="imeta">${epH}${extra}${srcB}<span class="badge ${tC}">${d.type}</span><a class="iact a-imdb" href="${href}" target="_blank" rel="noopener" aria-label="${esc(d.title)} on IMDb, opens in a new tab">${icon('external')}</a>${editB}${delB}<span class="dur">${fD(d.mins,d.eps)}</span></div>
+  </div>`;
+}
+
+/* ---------------- full render (filter / structural changes only) ---------------- */
 function render(){
-  const el=document.getElementById('list'),v=[...all()].sort((a,b)=>a.mins-b.mins).filter(mf);
-  if(!v.length){el.innerHTML='<div style="padding:3rem;text-align:center;color:var(--muted);font-family:var(--serif);font-size:1rem">Nothing here.</div>';hud(v);return}
+  const el=$('main'),v=[...all()].sort((a,b)=>a.mins-b.mins).filter(mf);
+  if(!v.length){
+    el.innerHTML='<div class="empty">Nothing here.<p>Try a different filter, or add a title.</p></div>';
+    hud(v);return;
+  }
+  const noAnim=prefersReduced();
   let h='',n=1,dy=0;
-  tiers.forEach((t,i)=>{const p=i?tiers[i-1].x:0,items=v.filter(d=>d.mins>p&&d.mins<=t.x);if(!items.length)return;
-    h+=`<div class="tier"><div class="tier-h"><span class="tier-l">${t.l}</span><div class="tier-ln"></div></div>`;
-    items.forEach(d=>{
-      const s=gs(d.rank),dn=s.s===2,wt=s.s===1,sc=dn?' s-d':wt?' s-w':'',c=CA[d.rank]||{};
-      const href=c.id?`https://www.imdb.com/title/${c.id}/`:`https://www.imdb.com/find/?q=${encodeURIComponent(d.title)}`;
-      const tC=d.type==='movie'?'b-movie':d.type==='anime'?'b-anime':'b-show';
-      const sC=d.custom?'badge b-cust':d.tag==='planned'?'badge b-plan':'badge b-src';
-      const sL=d.custom?'Added':d.tag==='planned'?'Plan':d.tag==='or'?'OR':d.tag==='rec'?'Rec':'—';
-      let extra='';
-      if(d.or)extra+='<span class="badge b-or">OR</span>';
-      if(c.status==='running')extra+='<span class="badge b-run">Running</span>';
-      else if(c.status==='ended')extra+='<span class="badge b-end">Ended</span>';
-      let epH='';if(wt&&d.eps)epH=`<span class="ep-t"><button class="epb" onclick="event.stopPropagation();W.epD(${d.rank})">−</button>${s.ep||0}/${d.eps}<button class="epb" onclick="event.stopPropagation();W.epI(${d.rank},${d.eps})">+</button></span>`;
-      const editB=d.custom?`<button class="ebtn" onclick="event.stopPropagation();W.editC(${d.rank})">✏</button>`:'';
-      const delB=d.custom?`<button class="xbtn" onclick="event.stopPropagation();W.delC(${d.rank})">✕</button>`:'';
-      const stag=Math.min(dy*.02,.5);dy++;
-      h+=`<div class="item${sc}" id="i-${d.rank}" style="animation-delay:${stag}s" onclick="W.tog(${d.rank},${!!d.eps})">
-        <div class="inum">${n++}</div><div class="imain">
-          <div class="ichk"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="var(--bg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="iinfo"><div class="it">${esc(d.title)}</div><div class="isub">${esc(d.sub||'')}${d.genre?' · '+esc(d.genre):''}</div></div>
-        </div><div class="imeta">${epH}${extra}<span class="${sC}">${sL}</span><span class="badge ${tC}">${d.type}</span><a class="imdb" href="${href}" target="_blank" rel="noopener" onclick="event.stopPropagation()">IMDb↗</a>${editB}${delB}<span class="dur">${fD(d.mins,d.eps)}</span></div></div>`});h+='</div>'});
-  el.innerHTML=h;hud(v)}
+  tiers.forEach((t,i)=>{
+    const p=i?tiers[i-1].x:0,items=v.filter(d=>d.mins>p&&d.mins<=t.x);
+    if(!items.length)return;
+    h+=`<section class="tier" aria-label="${t.l}"><div class="tier-h"><h2 class="tier-l">${t.l}</h2><div class="tier-ln"></div></div><div role="list">`;
+    items.forEach(d=>{h+=rowHTML(d,n++,noAnim?0:Math.min(dy++*.015,.35))});
+    h+='</div></section>';
+  });
+  el.innerHTML=h;hud(v);
+}
 
-function hud(v){if(!v)v=[...all()].sort((a,b)=>a.mins-b.mins).filter(mf);
-  const A=all(),dc=A.filter(d=>gs(d.rank).s===2),wc=A.filter(d=>gs(d.rank).s===1),rem=v.filter(d=>gs(d.rank).s!==2).reduce((a,b)=>a+b.mins,0);
-  document.getElementById('sT').textContent=v.length;document.getElementById('sD').textContent=dc.length;
-  document.getElementById('sW').textContent=wc.length;document.getElementById('sH').textContent=Math.round(rem/60).toLocaleString();
-  document.getElementById('ft').textContent=fH(rem);
-  const p=v.length?(v.filter(d=>gs(d.rank).s===2).length/v.length*100):0;
-  document.getElementById('pf').style.width=p.toFixed(1)+'%';document.getElementById('ptx').textContent=`${v.filter(d=>gs(d.rank).s===2).length}/${v.length}`}
+/* ---------------- surgical row patch (status / episode changes) ----------------
+   the old build called render() on every toggle: it rebuilt all 81 rows,
+   replayed every entrance animation, and destroyed keyboard focus mid-interaction. */
+function patchRow(r){
+  const d=[...all()].find(x=>x.rank===r);if(!d)return;
+  const row=$('i-'+r);if(!row)return render();
+  const s=gs(r),wasFocused=row.contains(document.activeElement);
+  row.classList.toggle('s-d',s.s===2);
+  row.classList.toggle('s-w',s.s===1);
+  row.querySelector('[data-st]').textContent=`Status: ${SLAB[s.s]}. Runtime ${fD(d.mins,d.eps)}.`;
+  // episode stepper appears/disappears with the watching state
+  const meta=row.querySelector('.imeta'),old=meta.querySelector('.ep-t');
+  if(s.s===1&&d.eps){
+    const cur=s.ep||0;
+    const html=`<span class="ep-t">
+      <button class="epb" data-act="epD" data-r="${r}" aria-label="One less episode of ${esc(d.title)}"${cur<=0?' disabled':''}>${icon('minus')}</button>
+      <span class="ep-n" aria-label="${cur} of ${d.eps} episodes watched">${cur}/${d.eps}</span>
+      <button class="epb" data-act="epI" data-r="${r}" aria-label="One more episode of ${esc(d.title)}"${cur>=d.eps?' disabled':''}>${icon('plus')}</button>
+    </span>`;
+    if(old)old.outerHTML=html; else meta.insertAdjacentHTML('afterbegin',html);
+  }else if(old)old.remove();
+  if(wasFocused&&!row.contains(document.activeElement))row.querySelector('.itog')?.focus();
+  hud();
+}
 
-// Expose all handlers via single W object
+function hud(v){
+  if(!v)v=[...all()].sort((a,b)=>a.mins-b.mins).filter(mf);
+  const A=all(),dc=A.filter(d=>gs(d.rank).s===2),wc=A.filter(d=>gs(d.rank).s===1),
+        rem=v.filter(d=>gs(d.rank).s!==2).reduce((a,b)=>a+b.mins,0),
+        done=v.filter(d=>gs(d.rank).s===2).length;
+  $('sT').textContent=v.length;$('sD').textContent=dc.length;
+  $('sW').textContent=wc.length;$('sH').textContent=Math.round(rem/60).toLocaleString();
+  $('ft').textContent=fH(rem);
+  const p=v.length?done/v.length*100:0;
+  $('pf').style.width=p.toFixed(1)+'%';
+  $('ptx').textContent=`${done}/${v.length}`;
+  const pb=$('pbar');pb.setAttribute('aria-valuenow',Math.round(p));
+  pb.setAttribute('aria-valuetext',`${done} of ${v.length} complete`);
+}
+
+/* ---------------- handlers ---------------- */
 const W={};window.W=W;
-W.tog=(r,hasEps)=>{const s=gs(r);if(hasEps){if(s.s===0)ST[r]={s:1,ep:s.ep||1};else if(s.s===1)ST[r]={s:2,ep:s.ep};else delete ST[r]}else{if(s.s===0)ST[r]={s:2,ep:0};else delete ST[r]}save();render()};
-W.epI=(r,mx)=>{const s=gs(r);s.ep=Math.min((s.ep||0)+1,mx);ST[r]=s;save();render()};
-W.epD=r=>{const s=gs(r);s.ep=Math.max((s.ep||1)-1,0);ST[r]=s;save();render()};
-W.fil=(f,btn)=>{AF=f;document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');if(showSV){showSV=false;document.getElementById('svw').classList.remove('on');document.getElementById('list').classList.remove('off')}render()};
-W.delC=r=>{if(!confirm('Delete this item?'))return;CI=CI.filter(c=>c.rank!==r);delete ST[r];delete CA[r];save();render()};
-W.rand=()=>{const v=[...all()].filter(mf).filter(d=>gs(d.rank).s===0);if(!v.length)return alert('No unwatched titles!');const p=v[Math.floor(Math.random()*v.length)];if(showSV){showSV=false;document.getElementById('svw').classList.remove('on');document.getElementById('list').classList.remove('off')}render();setTimeout(()=>{const e=document.getElementById('i-'+p.rank);if(e){e.scrollIntoView({behavior:'smooth',block:'center'});e.classList.add('hl');setTimeout(()=>e.classList.remove('hl'),3500)}},100)};
 
-// Stats
-W.togSV=()=>{showSV=!showSV;document.getElementById('svw').classList.toggle('on',showSV);document.getElementById('list').classList.toggle('off',showSV);if(showSV)renderSV()};
+W.tog=(r,hasEps)=>{
+  const s=gs(r),d=[...all()].find(x=>x.rank===r);
+  if(hasEps){
+    if(s.s===0)ST[r]={s:1,ep:s.ep||0};
+    else if(s.s===1)ST[r]={s:2,ep:s.ep};
+    else delete ST[r];
+  }else{
+    if(s.s===0)ST[r]={s:2,ep:0};else delete ST[r];
+  }
+  announce(`${d?.title||'Title'}: ${SLAB[gs(r).s]}`);
+  save();
+  // filtered views must drop the row that no longer matches
+  (AF==='watching'||AF==='done')?render():patchRow(r);
+};
+W.epI=(r,mx)=>{const s=gs(r);s.ep=Math.min((s.ep||0)+1,mx);ST[r]=s;save();patchRow(r);announce(`${s.ep} of ${mx} episodes`)};
+W.epD=r=>{const s=gs(r);s.ep=Math.max((s.ep||0)-1,0);ST[r]=s;save();patchRow(r);announce(`${s.ep} episodes`)};
+
+W.fil=f=>{
+  AF=f;
+  document.querySelectorAll('.fb').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.f===f)));
+  if(showSV)W.togSV(false);
+  render();
+  announce(`Filter: ${f}. ${[...all()].filter(mf).length} titles.`);
+};
+
+W.delC=async r=>{
+  const item=[...all()].find(d=>d.rank===r);if(!item)return;
+  const seeded=isBuiltIn(r);
+  const ok=await confirmDlg('Delete this title?',
+    `"${item.title}" will be removed from your watchlist.`+(seeded?' You can bring it back with Undo, or by restoring a backup.':''),'Delete');
+  if(!ok)return;
+  const snap={custom:CI.find(c=>c.rank===r),st:ST[r],ca:CA[r],ov:OV[r]};
+  if(seeded){DEL.push(r);syncDel()}          // soft-delete: B[] itself is never mutated
+  else CI=CI.filter(c=>c.rank!==r);
+  delete ST[r];delete CA[r];
+  save();fillGenres();render();
+  toast(`Deleted "${item.title}"`,'ok',{label:'Undo',fn:()=>{
+    if(seeded){DEL=DEL.filter(x=>x!==r);syncDel()}
+    else if(snap.custom)CI.push(snap.custom);
+    if(snap.st)ST[r]=snap.st;
+    if(snap.ca)CA[r]=snap.ca;
+    if(snap.ov)OV[r]=snap.ov;
+    save();fillGenres();render();toast('Restored.','ok');
+  }});
+};
+
+W.rand=()=>{
+  const v=[...all()].filter(mf).filter(d=>gs(d.rank).s===0);
+  if(!v.length)return toast('No unwatched titles in this filter.','info');
+  const p=v[Math.floor(Math.random()*v.length)];
+  if(showSV)W.togSV(false);
+  render();
+  requestAnimationFrame(()=>{
+    const e=$('i-'+p.rank);if(!e)return;
+    e.scrollIntoView({behavior:prefersReduced()?'auto':'smooth',block:'center'});
+    e.classList.add('hl');
+    e.querySelector('.itog')?.focus();
+    setTimeout(()=>e.classList.remove('hl'),3500);
+  });
+  announce(`Picked ${p.title}`);
+};
+
+/* ---------------- stats ---------------- */
+W.togSV=force=>{
+  showSV=force===undefined?!showSV:force;
+  $('svw').classList.toggle('on',showSV);
+  $('main').classList.toggle('off',showSV);
+  $('svBtn').setAttribute('aria-pressed',String(showSV));
+  if(showSV){renderSV();$('svw').focus?.()}
+};
 function renderSV(){
   const A=all(),dn=A.filter(d=>gs(d.rank).s===2),wt=A.filter(d=>gs(d.rank).s===1),pl=A.filter(d=>gs(d.rank).s===0);
   const hD=Math.round(dn.reduce((a,b)=>a+b.mins,0)/60),pct=A.length?Math.round(dn.length/A.length*100):0;
-  const ty={movie:0,anime:0,show:0};A.forEach(d=>ty[d.type]=(ty[d.type]||0)+1);const tM=Math.max(...Object.values(ty));
-  const ge={};A.forEach(d=>(d.genre||'').split(/\s*\/\s*/).forEach(g=>{if(g)ge[g]=(ge[g]||0)+1}));
+  const ty={movie:0,anime:0,show:0};A.forEach(d=>ty[d.type]=(ty[d.type]||0)+1);
+  const tM=Math.max(...Object.values(ty))||1;
+  const ge={};A.forEach(d=>genresOf(d).forEach(g=>ge[g]=(ge[g]||0)+1));
   const gS=Object.entries(ge).sort((a,b)=>b[1]-a[1]).slice(0,10),gM=gS.length?gS[0][1]:1;
   const tc={movie:'var(--movie)',anime:'var(--anime)',show:'var(--show)'};
-  let h=`<div class="sv-grid"><div class="sv-c"><div class="sv-cn">${A.length}</div><div class="sv-cl">Total</div></div><div class="sv-c"><div class="sv-cn" style="color:var(--gold)">${dn.length}</div><div class="sv-cl">Done</div></div><div class="sv-c"><div class="sv-cn" style="color:var(--watch)">${wt.length}</div><div class="sv-cl">Watching</div></div><div class="sv-c"><div class="sv-cn">${hD.toLocaleString()}</div><div class="sv-cl">Hrs watched</div></div></div>
-  <div class="sv-s"><div class="sv-t">Completion — ${pct}%</div><div class="sv-prog"><div class="sv-pf" style="width:${pct}%"></div></div></div>
-  <div class="sv-s"><div class="sv-t">By type</div>`;
-  ['movie','anime','show'].forEach(t=>h+=`<div class="bar-r"><div class="bar-l" style="color:${tc[t]}">${t[0].toUpperCase()+t.slice(1)}s</div><div class="bar-w"><div class="bar-f" style="width:${ty[t]/tM*100}%;background:${tc[t]}"></div></div><div class="bar-v">${ty[t]}</div></div>`);
-  h+=`</div><div class="sv-s"><div class="sv-t">Top genres</div>`;
-  gS.forEach(([g,c])=>h+=`<div class="bar-r"><div class="bar-l">${g}</div><div class="bar-w"><div class="bar-f" style="width:${c/gM*100}%;background:var(--gold2)"></div></div><div class="bar-v">${c}</div></div>`);
-  h+=`</div><div class="sv-s"><div class="sv-t">Status</div>
-  <div class="bar-r"><div class="bar-l" style="color:var(--faint)">Plan</div><div class="bar-w"><div class="bar-f" style="width:${pl.length/A.length*100}%;background:var(--faint)"></div></div><div class="bar-v">${pl.length}</div></div>
-  <div class="bar-r"><div class="bar-l" style="color:var(--watch)">Watching</div><div class="bar-w"><div class="bar-f" style="width:${wt.length/A.length*100}%;background:var(--watch)"></div></div><div class="bar-v">${wt.length}</div></div>
-  <div class="bar-r"><div class="bar-l" style="color:var(--gold)">Done</div><div class="bar-w"><div class="bar-f" style="width:${dn.length/A.length*100}%;background:var(--gold)"></div></div><div class="bar-v">${dn.length}</div></div></div>`;
-  document.getElementById('svw').innerHTML=h}
+  // every bar carries its value as text, so nothing depends on colour alone
+  const bar=(label,val,max,colour,lc)=>`<div class="bar-r"><div class="bar-l"${lc?` style="color:${lc}"`:''}>${esc(label)}</div><div class="bar-w"><div class="bar-f" style="width:${max?val/max*100:0}%;background:${colour}"></div></div><div class="bar-v">${val}</div></div>`;
+  let h=`<div class="sv-grid">
+    <div class="sv-c"><div class="sv-cn">${A.length}</div><div class="sv-cl">Total</div></div>
+    <div class="sv-c"><div class="sv-cn" style="color:var(--gold)">${dn.length}</div><div class="sv-cl">Done</div></div>
+    <div class="sv-c"><div class="sv-cn" style="color:var(--watch)">${wt.length}</div><div class="sv-cl">Watching</div></div>
+    <div class="sv-c"><div class="sv-cn">${hD.toLocaleString()}</div><div class="sv-cl">Hrs watched</div></div>
+  </div>
+  <div class="sv-s"><h2 class="sv-t">Completion — ${pct}%</h2>
+    <div class="sv-prog" role="img" aria-label="${pct}% of titles complete"><div class="sv-pf" style="width:${pct}%"></div></div></div>
+  <div class="sv-s"><h2 class="sv-t">By type</h2>`;
+  ['movie','anime','show'].forEach(t=>h+=bar(t[0].toUpperCase()+t.slice(1)+'s',ty[t],tM,tc[t],tc[t]));
+  h+=`</div><div class="sv-s"><h2 class="sv-t">Top genres</h2>`;
+  gS.forEach(([g,c])=>h+=bar(g,c,gM,'var(--gold2)'));
+  h+=`</div><div class="sv-s"><h2 class="sv-t">Status</h2>`;
+  h+=bar('Plan',pl.length,A.length,'var(--muted)','var(--muted)');
+  h+=bar('Watching',wt.length,A.length,'var(--watch)','var(--watch)');
+  h+=bar('Done',dn.length,A.length,'var(--gold)','var(--gold)');
+  h+=`</div>`;
+  $('svw').innerHTML=h;
+}
 
-// OMDB
-let sT;W.dSearch=q=>{clearTimeout(sT);if(q.length<2){document.getElementById('sr').innerHTML='';return}sT=setTimeout(()=>oS(q),500)};
-async function oS(q){try{const r=await fetch(`https://www.omdbapi.com/?apikey=${OK}&s=${encodeURIComponent(q)}`);const d=await r.json();const sr=document.getElementById('sr');sr.innerHTML='';if(d.Search){d.Search.slice(0,6).forEach(i=>{const div=document.createElement('div');div.className='sri';const img=i.Poster&&i.Poster!=='N/A'?i.Poster:'';div.innerHTML=`<img class="srp" src="${esc(img)}" alt="" onerror="this.style.background='var(--surface2)'"><div><div class="srt">${esc(i.Title)}</div><div class="srm">${esc(i.Year)} · ${esc(i.Type)}</div></div>`;div.onclick=()=>oSel(i.imdbID);sr.appendChild(div)})}else{sr.innerHTML='<div style="padding:8px;font-size:11px;color:var(--muted)">No results.</div>'}}catch(e){console.error('OMDB search failed',e);document.getElementById('sr').innerHTML='<div style="padding:8px;font-size:11px;color:var(--movie)">Search failed — check connection.</div>'}}
-async function oSel(id){try{const r=await fetch(`https://www.omdbapi.com/?apikey=${OK}&i=${id}&plot=short`);const d=await r.json();
-  document.getElementById('mTi').value=d.Title||'';document.getElementById('mGe').value=d.Genre||'';
-  document.getElementById('mSu').value=[d.Year,d.Actors?d.Actors.split(',')[0]:''].filter(Boolean).join(' · ');
-  document.getElementById('mImdb').value=d.imdbID||'';
-  const isSer=d.Type==='series';document.getElementById('mTy').value=isSer?'show':'movie';W.tyC();
-  document.getElementById('mMi').value=parseInt(d.Runtime)||0;
-  document.getElementById('sr').innerHTML='';document.getElementById('mS').value=''}catch(e){console.error('OMDB lookup failed',e);alert('Could not fetch title details — check connection and try again.')}}
+/* ---------------- OMDb ---------------- */
+let sT;
+W.dSearch=q=>{
+  clearTimeout(sT);
+  if(q.length<2){$('sr').innerHTML='';$('mS').setAttribute('aria-expanded','false');return}
+  sT=setTimeout(()=>oS(q),500);
+};
+async function oS(q){
+  const sr=$('sr');
+  try{
+    const r=await fetch(`https://www.omdbapi.com/?apikey=${OK}&s=${encodeURIComponent(q)}`);
+    const d=await r.json();sr.innerHTML='';
+    if(d.Search){
+      d.Search.slice(0,6).forEach(i=>{
+        const b=document.createElement('button');
+        b.type='button';b.className='sri';b.setAttribute('role','option');b.setAttribute('aria-selected','false');
+        const img=i.Poster&&i.Poster!=='N/A'?i.Poster:'';
+        b.innerHTML=`<img class="srp" src="${esc(img)}" alt="" loading="lazy" width="32" height="48" onerror="this.removeAttribute('src')"><span><span class="srt">${esc(i.Title)}</span><br><span class="srm">${esc(i.Year)} · ${esc(i.Type)}</span></span>`;
+        b.onclick=()=>oSel(i.imdbID);
+        sr.appendChild(b);
+      });
+      $('mS').setAttribute('aria-expanded','true');
+    }else{
+      sr.innerHTML='<div class="fn" style="padding:8px">No results.</div>';
+      $('mS').setAttribute('aria-expanded','false');
+    }
+  }catch(e){
+    console.error('OMDB search failed',e);
+    sr.innerHTML='<div class="err" style="padding:8px">Search failed — check your connection.</div>';
+  }
+}
+/* OMDb's series record has NO episode-count field — only totalSeasons — and its
+   series-level Runtime is often junk ("1 min" for Imposters, vs 45 min real).
+   So for a series we fan out: one call per season to count episodes, plus S1E1
+   for a trustworthy per-episode runtime. */
+const MAX_SEASONS=40;
+async function seriesDetail(id,totalSeasons){
+  const n=Math.min(Math.max(parseInt(totalSeasons)||1,1),MAX_SEASONS);
+  const seasons=await Promise.all(
+    Array.from({length:n},(_,i)=>
+      fetch(`https://www.omdbapi.com/?apikey=${OK}&i=${id}&Season=${i+1}`)
+        .then(r=>r.json()).catch(()=>null))
+  );
+  let eps=0;
+  seasons.forEach(s=>{if(s&&s.Response==='True'&&Array.isArray(s.Episodes))eps+=s.Episodes.length});
+  // per-episode runtime from the first real episode we can find
+  let epRuntime=0;
+  const first=seasons.find(s=>s&&Array.isArray(s.Episodes)&&s.Episodes.length);
+  if(first){
+    try{
+      const ep=await fetch(`https://www.omdbapi.com/?apikey=${OK}&i=${first.Episodes[0].imdbID}`).then(r=>r.json());
+      epRuntime=parseInt(ep.Runtime)||0;
+    }catch(e){console.warn('episode runtime lookup failed',e)}
+  }
+  return{eps,epRuntime,seasons:n};
+}
 
-W.tyC=()=>{const s=document.getElementById('mTy').value!=='movie';document.getElementById('mEW').style.display=s?'block':'none';document.getElementById('mDL').textContent=s?'Ep runtime (min)':'Runtime (min)';document.getElementById('mDN').textContent=s?'Per episode':'Total runtime'};
+async function oSel(id){
+  try{
+    const r=await fetch(`https://www.omdbapi.com/?apikey=${OK}&i=${id}&plot=short`);
+    const d=await r.json();
+    $('mTi').value=d.Title||'';$('mGe').value=d.Genre||'';
+    $('mSu').value=[d.Year,d.Actors?d.Actors.split(',')[0]:''].filter(Boolean).join(' · ');
+    $('mImdb').value=d.imdbID||'';
+    const isSer=d.Type==='series';
+    $('mTy').value=isSer?'show':'movie';W.tyC();
+    const rt=parseInt(d.Runtime)||0;
+    $('mMi').value=rt||'';
+    $('sr').innerHTML='';$('mS').value='';$('mS').setAttribute('aria-expanded','false');
+    clearErr();$('mTi').focus();
+    announce(`Filled in ${d.Title}`);
 
-// Modal open/close/submit
-W.openM=(editRank)=>{
-  document.getElementById('mEdit').value=editRank||'';
-  document.getElementById('mTitle').textContent=editRank?'Edit title':'Add a title';
-  if(editRank){const d=[...all()].find(x=>x.rank===editRank);if(d){document.getElementById('mTi').value=d.title;document.getElementById('mTy').value=d.type;W.tyC();document.getElementById('mTg').value=d.tag||'personal';document.getElementById('mGe').value=d.genre||'';document.getElementById('mMi').value=d.eps?Math.round(d.mins/d.eps):d.mins;if(d.eps)document.getElementById('mEp').value=d.eps;document.getElementById('mSu').value=d.sub||'';const c=CA[d.rank];if(c&&c.id)document.getElementById('mImdb').value=c.id}}
-  document.getElementById('modal').classList.add('open');document.getElementById(editRank?'mTi':'mS').focus()};
-W.closeM=()=>{document.getElementById('modal').classList.remove('open');['mS','mTi','mGe','mSu','mMi','mEp'].forEach(id=>document.getElementById(id).value='');document.getElementById('mImdb').value='';document.getElementById('mEdit').value='';document.getElementById('sr').innerHTML='';document.getElementById('mTy').value='movie';document.getElementById('mTg').value='personal';W.tyC()};
+    if(!isSer)return;
+    // series: go get the things OMDb won't give us in one call
+    const note=$('mDN');const prev=note.textContent;
+    note.textContent='Looking up episodes…';$('mEp').placeholder='…';
+    try{
+      const{eps,epRuntime,seasons}=await seriesDetail(d.imdbID,d.totalSeasons);
+      if(eps)$('mEp').value=eps;
+      // a series-level runtime under 5 min is OMDb noise, not a real episode length
+      if(epRuntime)$('mMi').value=epRuntime;
+      else if(rt<=5)$('mMi').value='';
+      note.textContent=prev;$('mEp').placeholder='24';
+      if(eps||epRuntime){
+        const bits=[];
+        if(eps)bits.push(`${eps} episodes across ${seasons} season${seasons>1?'s':''}`);
+        if(epRuntime)bits.push(`${epRuntime} min each`);
+        toast(`Found ${bits.join(', ')}.`,'ok');
+        announce(bits.join(', '));
+      }else{
+        toast('OMDb has no episode list for this one — enter it manually.','info');
+      }
+    }catch(e){
+      console.error('series detail failed',e);
+      note.textContent=prev;$('mEp').placeholder='24';
+      toast('Could not load episode details — enter them manually.','err');
+    }
+  }catch(e){console.error('OMDB lookup failed',e);toast('Could not fetch details — check your connection.','err')}
+}
+
+W.tyC=()=>{
+  const s=$('mTy').value!=='movie';
+  $('mEW').hidden=!s;
+  $('mDL').innerHTML=(s?'Ep runtime (min)':'Runtime (min)')+' <span class="req" aria-hidden="true">*</span>';
+  $('mDN').textContent=s?'Per episode':'Total runtime';
+};
+
+/* ---------------- modal ---------------- */
+function clearErr(){['eTi','eMi'].forEach(id=>$(id).textContent='');['mTi','mMi'].forEach(id=>$(id).removeAttribute('aria-invalid'))}
+function setErr(field,errId,msg){$(errId).innerHTML=`${icon('alert')}${esc(msg)}`;$(field).setAttribute('aria-invalid','true')}
+
+W.openM=editRank=>{
+  clearErr();
+  $('mEdit').value=editRank||'';
+  $('mTitle').textContent=editRank?'Edit title':'Add a title';
+  if(editRank){
+    const d=[...all()].find(x=>x.rank===editRank);
+    if(d){
+      $('mTi').value=d.title;$('mTy').value=d.type;W.tyC();
+      $('mTg').value=d.tag||'personal';$('mGe').value=d.genre||'';
+      $('mMi').value=d.eps?Math.round(d.mins/d.eps):d.mins;
+      if(d.eps)$('mEp').value=d.eps;
+      $('mSu').value=d.sub||'';
+      const c=CA[d.rank];if(c&&c.id)$('mImdb').value=c.id;
+    }
+  }else W.tyC();
+  $('mReset').hidden=!(editRank&&isBuiltIn(editRank)&&OV[editRank]);
+  openDlg('modal',$(editRank?'mTi':'mS'));
+};
+W.resetOverride=async()=>{
+  const r=parseInt($('mEdit').value)||null;if(!r||!OV[r])return;
+  const orig=B.find(d=>d.rank===r);
+  const ok=await confirmDlg('Reset this title?',`"${orig.title}" goes back to its original details. Your watched status and episode count are kept.`,'Reset');
+  if(!ok)return;
+  delete OV[r];save();W.closeM();fillGenres();render();
+  toast(`Reset "${orig.title}".`,'ok');
+};
+W.closeM=()=>{
+  closeDlg('modal');
+  ['mS','mTi','mGe','mSu','mMi','mEp','mImdb','mEdit'].forEach(id=>$(id).value='');
+  $('sr').innerHTML='';$('mTy').value='movie';$('mTg').value='personal';
+  $('mS').setAttribute('aria-expanded','false');clearErr();W.tyC();
+};
 W.editC=r=>W.openM(r);
 
-W.submit=()=>{
-  const editRank=parseInt(document.getElementById('mEdit').value)||null;
-  const title=document.getElementById('mTi').value.trim(),type=document.getElementById('mTy').value,tag=document.getElementById('mTg').value,genre=document.getElementById('mGe').value.trim(),sub=document.getElementById('mSu').value.trim(),mR=parseInt(document.getElementById('mMi').value)||0,eps=parseInt(document.getElementById('mEp').value)||null,imdbID=document.getElementById('mImdb').value.trim();
-  if(!title||!mR){alert('Title and runtime required.');return}
-  if(!editRank){const dup=all().find(d=>d.title.toLowerCase()===title.toLowerCase());if(dup&&!confirm(`"${dup.title}" is already on your list. Add anyway?`))return}
-  const tot=(type!=='movie'&&eps)?mR*eps:mR;
-  if(editRank){const idx=CI.findIndex(c=>c.rank===editRank);if(idx>=0){CI[idx]={...CI[idx],title,sub,type,genre,mins:tot,tag,or:tag==='or',...(eps?{eps}:{eps:undefined})};if(imdbID)CA[editRank]={...CA[editRank],id:imdbID}}}
-  else{const mx=Math.max(...all().map(d=>d.rank),999);const ni={rank:mx+1,title,sub,type,genre,mins:tot,tag,or:tag==='or',custom:true,...(eps?{eps}:{})};CI.push(ni);if(imdbID)CA[ni.rank]={id:imdbID}}
-  save();W.closeM();render()};
+W.submit=async()=>{
+  clearErr();
+  const editRank=parseInt($('mEdit').value)||null;
+  const title=$('mTi').value.trim(),type=$('mTy').value,tag=$('mTg').value,
+        genre=$('mGe').value.trim(),sub=$('mSu').value.trim(),
+        mR=parseInt($('mMi').value)||0,eps=parseInt($('mEp').value)||null,
+        imdbID=$('mImdb').value.trim();
 
-// Backup / restore
+  // inline errors next to the field, not a blocking alert()
+  let bad=null;
+  if(!title){setErr('mTi','eTi','Enter a title.');bad=bad||'mTi'}
+  if(!mR||mR<1){setErr('mMi','eMi','Enter a runtime of at least 1 minute.');bad=bad||'mMi'}
+  if(bad){$(bad).focus();return}
+
+  if(!editRank){
+    const dup=all().find(d=>d.title.toLowerCase()===title.toLowerCase());
+    if(dup){
+      const go=await confirmDlg('Already on your list',`"${dup.title}" is already there. Add it again?`,'Add anyway');
+      if(!go){$('mTi').focus();return}
+    }
+  }
+  const tot=(type!=='movie'&&eps)?mR*eps:mR;
+  if(editRank){
+    const idx=CI.findIndex(c=>c.rank===editRank);
+    if(idx>=0){
+      // null, not undefined — Firestore rejects undefined and the whole save fails
+      CI[idx]={...CI[idx],title,sub,type,genre,mins:tot,tag,or:tag==='or',eps:eps||null};
+      if(imdbID)CA[editRank]={...CA[editRank],id:imdbID};
+    }else if(isBuiltIn(editRank)){
+      // seeded title: record an override rather than mutating B[]
+      OV[editRank]={title,sub,type,genre,mins:tot,tag,or:tag==='or',eps:eps||null};
+      if(imdbID)CA[editRank]={...CA[editRank],id:imdbID};
+    }
+  }else{
+    const mx=Math.max(...all().map(d=>d.rank),999);
+    const ni={rank:mx+1,title,sub,type,genre,mins:tot,tag,or:tag==='or',custom:true,...(eps?{eps}:{})};
+    CI.push(ni);if(imdbID)CA[ni.rank]={id:imdbID};
+  }
+  save();W.closeM();fillGenres();render();
+  toast(editRank?`Updated "${title}"`:`Added "${title}"`,'ok');
+};
+
+/* ---------------- repair shows ----------------
+   Finds shows/anime with no episode count or an implausible runtime (OMDb's
+   series-level Runtime is unreliable), fetches the real numbers, and shows a
+   review list. Nothing is written until the user applies it. */
+const IMPLAUSIBLE=5;                       // minutes; below this a runtime is noise
+function needsRepair(d){
+  if(d.type!=='show'&&d.type!=='anime')return false;
+  if(!d.eps)return true;                                  // no episode count
+  const per=d.eps?d.mins/d.eps:d.mins;
+  return !d.mins||per<IMPLAUSIBLE;                        // nonsense per-episode length
+}
+async function resolveId(d){
+  if(CA[d.rank]&&CA[d.rank].id)return CA[d.rank].id;
+  try{
+    const s=await fetch(`https://www.omdbapi.com/?apikey=${OK}&s=${encodeURIComponent(d.title)}&type=series`).then(r=>r.json());
+    return s.Search&&s.Search.length?s.Search[0].imdbID:null;
+  }catch(e){return null}
+}
+W.repairShows=async()=>{
+  const cands=all().filter(needsRepair);
+  if(!cands.length)return toast('Every show already has sensible episode data.','ok');
+  const t=toast(`Checking ${cands.length} show${cands.length>1?'s':''}…`,'info');
+  const found=[];
+  for(const d of cands){
+    const id=await resolveId(d);
+    if(!id)continue;
+    try{
+      const det=await fetch(`https://www.omdbapi.com/?apikey=${OK}&i=${id}`).then(r=>r.json());
+      const{eps,epRuntime}=await seriesDetail(id,det.totalSeasons);
+      if(!eps)continue;
+      const per=epRuntime||(d.eps?Math.round(d.mins/d.eps):d.mins)||0;
+      if(!per)continue;
+      const mins=eps*per;
+      if(eps===d.eps&&mins===d.mins)continue;              // nothing to change
+      found.push({rank:d.rank,title:d.title,id,eps,per,mins,curEps:d.eps||null,curMins:d.mins});
+    }catch(e){console.warn('repair lookup failed for',d.title,e)}
+  }
+  t.remove();
+  if(!found.length)return toast('Nothing could be improved automatically.','info');
+  repairList=found;
+  $('repSum').textContent=`${found.length} show${found.length>1?'s':''} can be corrected. Review and uncheck anything you want to keep.`;
+  $('repList').innerHTML=found.map((f,i)=>`
+    <label class="rep-row">
+      <input type="checkbox" checked data-i="${i}">
+      <span class="rep-b">
+        <span class="rep-t">${esc(f.title)}</span>
+        <span class="rep-d"><del>${f.curEps?f.curEps+'ep · ':''}${fD(f.curMins,f.curEps||undefined)}</del> → <ins>${f.eps}ep × ${f.per}m = ${fD(f.mins,f.eps)}</ins></span>
+      </span>
+    </label>`).join('');
+  openDlg('repDlg',$('repApply'));
+};
+let repairList=[];
+W.applyRepairs=async()=>{
+  const picked=[...$('repList').querySelectorAll('input:checked')].map(c=>repairList[+c.dataset.i]);
+  if(!picked.length)return closeDlg('repDlg');
+  picked.forEach(f=>{
+    const idx=CI.findIndex(c=>c.rank===f.rank);
+    if(idx>=0)CI[idx]={...CI[idx],eps:f.eps,mins:f.mins};
+    else if(isBuiltIn(f.rank))OV[f.rank]={...(OV[f.rank]||{}),eps:f.eps,mins:f.mins};
+    if(f.id)CA[f.rank]={...CA[f.rank],id:f.id};
+  });
+  closeDlg('repDlg');
+  const ok=await save();render();
+  toast(ok?`Fixed ${picked.length} show${picked.length>1?'s':''}.`:'Applied locally, but the sync failed.',ok?'ok':'err');
+};
+
+/* ---------------- change passcode ----------------
+   The hash lives in localStorage (so the gate works offline and before Firebase
+   loads) and is mirrored to Firestore so other devices pick it up on next load. */
+W.openPin=()=>{
+  ['pinOld','pinNew','pinNew2'].forEach(id=>{$(id).value='';$(id).removeAttribute('aria-invalid')});
+  ['ePinOld','ePinNew','ePinNew2'].forEach(id=>$(id).textContent='');
+  openDlg('pinDlg',$('pinOld'));
+};
+W.closePin=()=>closeDlg('pinDlg');
+W.savePin=async()=>{
+  const {sha256,activeHash}=window.__wlCrypto;
+  const oldV=$('pinOld').value.trim(),nV=$('pinNew').value.trim(),n2=$('pinNew2').value.trim();
+  ['ePinOld','ePinNew','ePinNew2'].forEach(id=>$(id).textContent='');
+  ['pinOld','pinNew','pinNew2'].forEach(id=>$(id).removeAttribute('aria-invalid'));
+  let bad=null;
+  try{
+    if(await sha256(oldV)!==activeHash()){setErr('pinOld','ePinOld','That is not your current passcode.');bad=bad||'pinOld'}
+  }catch(e){setErr('pinOld','ePinOld','Secure check unavailable in this browser.');return $('pinOld').focus()}
+  if(!/^\d{4}$/.test(nV)){setErr('pinNew','ePinNew','Use exactly 4 digits.');bad=bad||'pinNew'}
+  else if(nV===oldV){setErr('pinNew','ePinNew','That is the same as your current passcode.');bad=bad||'pinNew'}
+  if(nV!==n2){setErr('pinNew2','ePinNew2','The two passcodes do not match.');bad=bad||'pinNew2'}
+  if(bad)return $(bad).focus();
+
+  const h=await sha256(nV);
+  const prev=localStorage.getItem('wlHash');
+  localStorage.setItem('wlHash',h);
+  const ok=await save();                            // mirrors passHash to Firestore
+  if(ok){W.closePin();toast('Passcode updated.','ok')}
+  else{
+    // roll back so the device and the server can't disagree about the passcode
+    prev?localStorage.setItem('wlHash',prev):localStorage.removeItem('wlHash');
+    toast('Could not sync the new passcode — it was not changed.','err');
+  }
+};
+
+/* ---------------- backup / restore ---------------- */
 W.exportJSON=()=>{
-  const blob=new Blob([JSON.stringify({statuses:ST,custom:CI,cache:CA},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({statuses:ST,custom:CI,cache:CA,overrides:OV,deleted:DEL},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=`watchlist-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();
-  URL.revokeObjectURL(a.href)};
-W.importJSON=input=>{
+  a.download=`watchlist-backup-${new Date().toISOString().slice(0,10)}.json`;
+  // the anchor must be in the document — Chrome can ignore a click on a detached one
+  a.style.display='none';document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},0);
+  toast('Backup downloaded.','ok');
+};
+W.importJSON=async input=>{
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
-  reader.onload=()=>{
-    try{const d=JSON.parse(reader.result);
+  reader.onload=async()=>{
+    try{
+      const d=JSON.parse(reader.result);
       if(typeof d!=='object'||d===null)throw new Error('Not a valid backup file');
-      if(!confirm('This will replace your current watchlist data with the backup. Continue?'))return;
+      const ok=await confirmDlg('Replace your watchlist?','This overwrites your current progress with the backup. Your current data cannot be recovered afterwards.','Replace');
+      if(!ok){input.value='';return}
       ST=d.statuses||{};CI=d.custom||[];CA=d.cache||{};
-      save();render();alert('Restored from backup.')
-    }catch(e){console.error('import failed',e);alert('Could not read that file — make sure it is a watchlist JSON backup.')}
-    input.value=''
+      OV=d.overrides||{};DEL=d.deleted||[];syncDel();   // older backups simply have none
+      save();fillGenres();render();toast('Restored from backup.','ok');
+    }catch(e){console.error('import failed',e);toast('Could not read that file — make sure it is a watchlist JSON backup.','err')}
+    input.value='';
   };
-  reader.readAsText(file)};
+  reader.readAsText(file);
+};
 
-// Enrich
-W.enrichAll=async()=>{const btn=document.getElementById('enrBtn');btn.textContent='⏳';btn.disabled=true;
-  const items=all().filter(d=>!CA[d.rank]||!CA[d.rank].id);let done=0,failed=0,i=0;
+/* ---------------- enrich ---------------- */
+W.enrichAll=async()=>{
+  const btn=$('enrBtn');btn.disabled=true;btn.setAttribute('aria-busy','true');
+  const items=all().filter(d=>!CA[d.rank]||!CA[d.rank].id);
+  if(!items.length){
+    btn.disabled=false;btn.removeAttribute('aria-busy');
+    toast('Every title already has an IMDb link.','info');
+    return W.repairShows();                     // still offer to fix episode data
+  }
+  const t=toast(`Fetching IMDb links for ${items.length} titles…`,'info');
+  let done=0,failed=0,i=0;
   const CONC=4;
   async function worker(){
     while(i<items.length){
       const d=items[i++];
-      try{const r=await fetch(`https://www.omdbapi.com/?apikey=${OK}&t=${encodeURIComponent(d.title)}&type=${d.type==='anime'?'series':d.type==='show'?'series':'movie'}`);const j=await r.json();
-        if(j.imdbID){const yr=j.Year||'';let status='';if(yr.includes('–')){status=yr.endsWith('–')||yr.endsWith('– ')?'running':'ended'}
-        CA[d.rank]={id:j.imdbID,status};done++}else{failed++}
+      try{
+        const r=await fetch(`https://www.omdbapi.com/?apikey=${OK}&t=${encodeURIComponent(d.title)}&type=${d.type==='movie'?'movie':'series'}`);
+        const j=await r.json();
+        if(j.imdbID){
+          const yr=j.Year||'';let status='';
+          if(yr.includes('–'))status=(yr.endsWith('–')||yr.endsWith('– '))?'running':'ended';
+          CA[d.rank]={id:j.imdbID,status};done++;
+        }else failed++;
       }catch(e){console.error('enrich failed for',d.title,e);failed++}
-      render()
     }
   }
+  // render ONCE at the end, not once per title per worker
   await Promise.all(Array.from({length:CONC},worker));
-  await save();render();btn.textContent='🔄';btn.disabled=false;
-  alert(`Done! Enriched ${done} titles.${failed?` (${failed} not found or failed.)`:''}`)};
+  await save();render();
+  t.remove();
+  btn.disabled=false;btn.removeAttribute('aria-busy');
+  toast(`Enriched ${done} titles.${failed?` ${failed} not found.`:''}`,failed?'info':'ok');
+  await W.repairShows();                        // then surface any bad episode data
+};
 
+/* ---------------- wiring: delegation, no inline handlers ---------------- */
+$('main').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const r=+b.dataset.r;
+  switch(b.dataset.act){
+    case 'tog':W.tog(r,b.dataset.eps==='1');break;
+    case 'epI':{const d=[...all()].find(x=>x.rank===r);W.epI(r,d.eps);break}
+    case 'epD':W.epD(r);break;
+    case 'edit':W.editC(r);break;
+    case 'del':W.delC(r);break;
+  }
+});
+document.querySelectorAll('.fb').forEach(b=>b.addEventListener('click',()=>W.fil(b.dataset.f)));
+$('genreF').onchange=e=>{
+  GF=e.target.value;
+  $('gsel').classList.toggle('on',!!GF);
+  if(showSV)W.togSV(false);
+  render();
+  announce(GF?`Genre: ${GF}. ${[...all()].filter(mf).length} titles.`:`Genre filter cleared. ${[...all()].filter(mf).length} titles.`);
+};
+$('gclr').onclick=()=>{$('genreF').value='';$('genreF').dispatchEvent(new Event('change'));$('genreF').focus()};
+$('repClose').onclick=()=>closeDlg('repDlg');
+$('repCancel').onclick=()=>closeDlg('repDlg');
+$('repApply').onclick=()=>W.applyRepairs();
+$('repDlg').addEventListener('click',e=>{if(e.target.id==='repDlg')closeDlg('repDlg')});
+$('pinBtn').onclick=()=>W.openPin();
+$('pinClose').onclick=()=>W.closePin();
+$('pinCancel').onclick=()=>W.closePin();
+$('pinForm').onsubmit=e=>{e.preventDefault();W.savePin()};
+$('pinDlg').addEventListener('click',e=>{if(e.target.id==='pinDlg')W.closePin()});
+$('mReset').onclick=()=>W.resetOverride();
+['pinOld','pinNew','pinNew2'].forEach(id=>$(id).addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,4)}));
+$('randBtn').onclick=()=>W.rand();
+$('svBtn').onclick=()=>W.togSV();
+$('enrBtn').onclick=()=>W.enrichAll();
+$('expBtn').onclick=()=>W.exportJSON();
+$('impBtn').onclick=()=>$('impF').click();
+$('impF').onchange=e=>W.importJSON(e.target);
+$('addBtn').onclick=()=>W.openM();
+$('mS').oninput=e=>W.dSearch(e.target.value);
+$('mTy').onchange=()=>W.tyC();
+$('mClose').onclick=()=>W.closeM();
+$('mCancel').onclick=()=>W.closeM();
+$('mForm').onsubmit=e=>{e.preventDefault();W.submit()};
+$('modal').addEventListener('click',e=>{if(e.target.id==='modal')W.closeM()});
+$('cfYes').onclick=()=>resolveCf(true);
+$('cfNo').onclick=()=>resolveCf(false);
+$('confirm').addEventListener('click',e=>{if(e.target.id==='confirm')resolveCf(false)});
+
+/* ---------------- boot ---------------- */
 onAuthStateChanged(auth,async user=>{
   if(!user)return;
-  const s=await load();ST=s.st;CI=s.cust;CA=s.ca;render()
+  const s=await load();
+  ST=s.st;CI=s.cust;CA=s.ca;OV=s.ov;DEL=s.del;syncDel();
+  fillGenres();render();
 });
-signInAnonymously(auth).catch(e=>{console.error('sign-in failed',e);sy('error')});
+signInAnonymously(auth).catch(e=>{console.error('sign-in failed',e);sy('error');toast('Could not connect — working offline.','err')});
+fillGenres();render();
 </script>
 </body>
 </html>
