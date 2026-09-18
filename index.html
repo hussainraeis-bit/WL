@@ -3,8 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="color-scheme" content="dark">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#1a1b24">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Watchlist">
 <title>Hussain's Master Watchlist</title>
+<script>try{var _t=localStorage.getItem('wlTheme');if(_t&&_t!=='midnight')document.documentElement.dataset.theme=_t}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -39,10 +45,58 @@
   /* ---- motion (Subtle tier) ---- */
   --dur-fast:120ms;--dur:200ms;--dur-slow:320ms;--ease:cubic-bezier(.4,0,.2,1);
 
+  /* tokenised so themes can invert them; every value below is contrast-checked */
+  --on-accent:#1a1500;
+  --scrim:rgba(10,10,16,.82);
+  --shadow-sm:0 8px 24px rgba(0,0,0,.35);
+  --shadow-md:0 12px 32px rgba(0,0,0,.45);
+  --shadow-xl:0 32px 64px rgba(0,0,0,.55);
+  --grain:.30;
+  --poster-blend:normal;
+
   --radius:8px;--radius-lg:14px;
   --tap:44px;            /* comfortable target */
   --tap-min:28px;        /* compact target, still > WCAG 2.2 AA 24px */
   --z-modal:100;--z-toast:200;--z-lock:300;
+}
+/* ============ themes ============
+   Every text token below was checked against bg, surface AND surface2 at 4.5:1
+   before being written here. Non-text accents clear 3:1 as well. */
+:root[data-theme="noir"]{
+  --bg:#0d0d0f;--bg2:#131316;--surface:#18181c;--surface2:#232329;--surface3:#2c2c34;
+  --text:#f2f0ee;--text2:#cfcbc6;--muted:#9d9891;--deco:#4a4741;
+  --gold:#e8695d;--gold2:#c9503f;--gg:rgba(232,105,93,.10);--gg2:rgba(232,105,93,.20);
+  --border:rgba(232,105,93,.10);--border2:rgba(232,105,93,.20);--border3:rgba(232,105,93,.34);
+  --watch:#7ba7d4;--running:#57bd85;--danger:#ef6a5e;--ended:#a39a8c;
+  --anime:#b3a3e0;--show:#6dbecc;--movie:#e08a6a;--or:#6fd0b0;
+  --on-accent:#1a0805;--grain:.42;
+  --serif:'Cormorant',Georgia,serif;
+}
+:root[data-theme="frost"]{
+  --bg:#10151c;--bg2:#151b24;--surface:#1a212b;--surface2:#232c38;--surface3:#2c3644;
+  --text:#e8eef5;--text2:#c3cfdb;--muted:#94a3b3;--deco:#465464;
+  --gold:#5ec8d8;--gold2:#3da3b3;--gg:rgba(94,200,216,.10);--gg2:rgba(94,200,216,.20);
+  --border:rgba(94,200,216,.10);--border2:rgba(94,200,216,.20);--border3:rgba(94,200,216,.34);
+  --watch:#7aa7f0;--running:#5ec98f;--danger:#ee7b78;--ended:#8fa0b0;
+  --anime:#a99ce8;--show:#6cc3d4;--movie:#e59a76;--or:#66d1ae;
+  --on-accent:#05171c;--grain:.22;
+}
+:root[data-theme="parchment"]{
+  --bg:#f4f0e6;--bg2:#efeadd;--surface:#fffdf7;--surface2:#ebe5d6;--surface3:#e0d8c4;
+  --text:#26221b;--text2:#4a443a;--muted:#6b6355;--deco:#b3a892;
+  --gold:#7d5f1a;--gold2:#63490f;--gg:rgba(125,95,26,.08);--gg2:rgba(125,95,26,.16);
+  --border:rgba(125,95,26,.14);--border2:rgba(125,95,26,.24);--border3:rgba(125,95,26,.40);
+  --watch:#1f5d8a;--running:#256b45;--danger:#a8352c;--ended:#7a6f5c;
+  --anime:#5a3f96;--show:#1d5f6b;--movie:#9c4a22;--or:#1f6b52;
+  --on-accent:#fffdf7;
+  --scrim:rgba(40,35,25,.55);
+  --shadow-sm:0 8px 24px rgba(90,75,40,.14);
+  --shadow-md:0 12px 32px rgba(90,75,40,.18);
+  --shadow-xl:0 32px 64px rgba(90,75,40,.22);
+  --grain:.10;
+}
+:root[data-theme="parchment"] .hero h1 em{
+  background:linear-gradient(135deg,#7d5f1a,#a37c24,#63490f);-webkit-background-clip:text;background-clip:text;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
@@ -54,11 +108,11 @@ body{
   padding-bottom:env(safe-area-inset-bottom);
 }
 /* film-grain overlay -- purely decorative */
-body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.3}
+body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:var(--grain)}
 
 /* ============ a11y utilities ============ */
 .vh{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
-.skip{position:absolute;left:var(--sp-2);top:-100px;z-index:400;background:var(--gold);color:#1a1500;padding:var(--sp-2) var(--sp-4);border-radius:var(--radius);font-weight:500;font-size:var(--fs-sm);text-decoration:none;transition:top var(--dur) var(--ease)}
+.skip{position:absolute;left:var(--sp-2);top:-100px;z-index:400;background:var(--gold);color:var(--on-accent);padding:var(--sp-2) var(--sp-4);border-radius:var(--radius);font-weight:500;font-size:var(--fs-sm);text-decoration:none;transition:top var(--dur) var(--ease)}
 .skip:focus{top:var(--sp-2)}
 
 /* One focus treatment for the entire app. 3:1+ against every surface. */
@@ -106,6 +160,16 @@ svg{display:block;flex-shrink:0}
 .ibtn:hover{background:var(--surface);color:var(--text)}
 .ibtn .ico{width:16px;height:16px}
 .ibtn[disabled]{opacity:.45;cursor:not-allowed}
+.search{position:relative;display:flex;align-items:center;flex:1 1 200px;min-width:0;max-width:300px}
+.search input{width:100%;min-height:var(--tap-min);padding:var(--sp-1) var(--sp-6) var(--sp-1) var(--sp-7);border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:var(--fs-xs);outline:none;transition:border-color var(--dur) var(--ease)}
+.search input::placeholder{color:var(--muted)}
+.search input:focus-visible{border-color:var(--gold2)}
+.search input::-webkit-search-cancel-button{display:none}
+.s-ico{position:absolute;left:var(--sp-3);width:14px;height:14px;color:var(--muted);pointer-events:none}
+.s-clr{position:absolute;right:4px;width:var(--tap-min);height:var(--tap-min);display:flex;align-items:center;justify-content:center;border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:var(--radius)}
+.s-clr:hover{color:var(--text);background:var(--surface2)}
+.s-clr .ico{width:13px;height:13px}
+.s-hit{background:linear-gradient(transparent 62%,var(--gg2) 62%);border-radius:2px}
 /* genre filter — an independent axis, ANDed with the type/status filter */
 .gsel{position:relative;display:flex;align-items:center}
 .gsel select{
@@ -123,6 +187,33 @@ svg{display:block;flex-shrink:0}
 .gsel.on+.gclr{display:inline-flex}
 .gclr:hover{background:var(--surface);color:var(--text)}
 .gclr .ico{width:13px;height:13px}
+.stars{display:flex;gap:2px;align-items:center;min-height:var(--tap)}
+.star{width:var(--tap-min);height:var(--tap-min);display:flex;align-items:center;justify-content:center;border:none;background:transparent;cursor:pointer;color:var(--deco);border-radius:var(--radius);transition:color var(--dur-fast) var(--ease),transform var(--dur-fast) var(--ease)}
+.star .ico{width:18px;height:18px;fill:currentColor;stroke:none}
+.star:hover{transform:scale(1.12)}
+.star[aria-checked=true],.star.lit{color:var(--gold)}
+.star-clr{margin-left:var(--sp-2);font-size:var(--fs-2xs);color:var(--muted);background:none;border:none;cursor:pointer;text-decoration:underline;min-height:var(--tap-min)}
+.i-rate{display:inline-flex;align-items:center;gap:2px;font-family:var(--mono);font-size:var(--fs-2xs);color:var(--gold);white-space:nowrap}
+.i-rate .ico{width:10px;height:10px;fill:currentColor;stroke:none}
+.i-note{color:var(--muted)}
+.i-note .ico{width:12px;height:12px}
+/* theme picker: each card previews its own palette rather than naming colours */
+.th-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--sp-3)}
+.th{position:relative;padding:0;border:1px solid var(--border2);border-radius:var(--radius-lg);background:transparent;cursor:pointer;overflow:hidden;text-align:left;transition:border-color var(--dur) var(--ease),transform var(--dur) var(--ease)}
+.th:hover{transform:translateY(-2px)}
+.th[aria-checked=true]{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.th-sw{display:block;height:74px;padding:var(--sp-3);position:relative}
+.th-sw i{position:absolute;display:block;border-radius:3px}
+.th-sw i:nth-child(1){left:12px;top:12px;width:44px;height:8px}
+.th-sw i:nth-child(2){left:12px;top:26px;width:30px;height:6px;opacity:.75}
+.th-sw i:nth-child(3){left:12px;top:40px;width:22px;height:22px;border-radius:5px}
+.th-sw i:nth-child(4){left:40px;top:44px;width:14px;height:14px;border-radius:4px}
+.th-sw i:nth-child(5){right:12px;top:12px;width:26px;height:38px;border-radius:4px}
+.th-n{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);font-size:var(--fs-xs);color:var(--text);border-top:1px solid var(--border)}
+.th-n .ico{width:14px;height:14px;opacity:0}
+.th[aria-checked=true] .th-n .ico{opacity:1}
+.th-n{border-top:1px solid transparent}
+
 /* repair-shows review list */
 .rep-list{max-height:min(46dvh,420px);overflow-y:auto;margin:var(--sp-3) 0;border:1px solid var(--border);border-radius:var(--radius)}
 .rep-row{display:flex;align-items:flex-start;gap:var(--sp-3);padding:var(--sp-3);border-bottom:1px solid var(--border);min-height:var(--tap)}
@@ -154,7 +245,7 @@ svg{display:block;flex-shrink:0}
 .rail-s::-webkit-scrollbar{height:6px}
 .rail-s::-webkit-scrollbar-thumb{background:var(--border3);border-radius:3px}
 .rc{flex:0 0 132px;scroll-snap-align:start;text-align:left;background:none;border:none;padding:0;cursor:pointer;color:inherit;display:flex;flex-direction:column;gap:var(--sp-2)}
-.rc-art{display:block;position:relative;aspect-ratio:2/3;border-radius:10px;overflow:hidden;background:var(--surface2);border:1px solid var(--border);box-shadow:0 8px 24px rgba(0,0,0,.35);transition:transform var(--dur) var(--ease),border-color var(--dur) var(--ease)}
+.rc-art{display:block;position:relative;aspect-ratio:2/3;border-radius:10px;overflow:hidden;background:var(--surface2);border:1px solid var(--border);box-shadow:var(--shadow-sm);transition:transform var(--dur) var(--ease),border-color var(--dur) var(--ease)}
 .rc:hover .rc-art,.rc:focus-visible .rc-art{transform:translateY(-3px);border-color:var(--border3)}
 .rc-art img{width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0;z-index:1}
 .rc-inner{display:block;position:absolute;inset:0}
@@ -217,7 +308,7 @@ svg{display:block;flex-shrink:0}
 .ichk .ico{width:12px;height:12px;opacity:0;transition:opacity var(--dur-fast) var(--ease)}
 .item.s-w .ichk{border-color:var(--watch);background:rgba(106,173,224,.18);color:var(--watch)}
 .item.s-w .ichk .i-play{opacity:1}
-.item.s-d .ichk{background:var(--gold);border-color:var(--gold);color:#1a1500}
+.item.s-d .ichk{background:var(--gold);border-color:var(--gold);color:var(--on-accent)}
 .item.s-d .ichk .i-check{opacity:1}
 .iinfo{display:block;min-width:0;flex:1;overflow:hidden}
 .it{font-size:var(--fs-base);font-weight:400;color:var(--text);line-height:1.35;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -304,9 +395,9 @@ svg{display:block;flex-shrink:0}
 .sv-pf{height:100%;background:linear-gradient(90deg,var(--gold2),var(--gold));border-radius:3px}
 
 /* ============ modal ============ */
-.mo-bg{display:none;position:fixed;inset:0;background:rgba(10,10,16,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:var(--z-modal);align-items:center;justify-content:center;padding:var(--sp-4)}
+.mo-bg{display:none;position:fixed;inset:0;background:var(--scrim);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:var(--z-modal);align-items:center;justify-content:center;padding:var(--sp-4)}
 .mo-bg.open{display:flex}
-.mo{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:var(--sp-6);width:100%;max-width:480px;max-height:min(90dvh,760px);overflow-y:auto;box-shadow:0 32px 64px rgba(0,0,0,.55)}
+.mo{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:var(--sp-6);width:100%;max-width:480px;max-height:min(90dvh,760px);overflow-y:auto;box-shadow:var(--shadow-xl)}
 .mo-h{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-3);margin-bottom:var(--sp-5)}
 .mo h2{font-family:var(--serif);font-size:var(--fs-xl);font-weight:400;line-height:1.2}
 .mo-x{width:var(--tap-min);height:var(--tap-min);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius);border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer}
@@ -334,7 +425,7 @@ svg{display:block;flex-shrink:0}
 .srt{font-size:var(--fs-sm);color:var(--text)}
 .srm{font-size:var(--fs-xs);color:var(--muted);font-family:var(--mono)}
 .mbtn{display:flex;gap:var(--sp-3);margin-top:var(--sp-5)}
-.btn-go{flex:1;min-height:var(--tap);padding:var(--sp-3);border-radius:var(--radius);background:linear-gradient(135deg,var(--gold2),var(--gold));color:#1a1500;border:none;font-size:var(--fs-sm);font-weight:600;cursor:pointer;transition:filter var(--dur) var(--ease)}
+.btn-go{flex:1;min-height:var(--tap);padding:var(--sp-3);border-radius:var(--radius);background:linear-gradient(135deg,var(--gold2),var(--gold));color:var(--on-accent);border:none;font-size:var(--fs-sm);font-weight:600;cursor:pointer;transition:filter var(--dur) var(--ease)}
 .btn-go:hover{filter:brightness(1.08)}
 .btn-x{min-height:var(--tap);padding:var(--sp-3) var(--sp-5);border-radius:var(--radius);background:transparent;color:var(--muted);border:1px solid var(--border2);font-size:var(--fs-sm);cursor:pointer}
 .btn-x:hover{color:var(--text);border-color:var(--border3)}
@@ -347,7 +438,7 @@ svg{display:block;flex-shrink:0}
 
 /* ============ toasts -- replace alert() ============ */
 .toasts{position:fixed;bottom:calc(var(--sp-8) + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:var(--z-toast);display:flex;flex-direction:column;gap:var(--sp-2);align-items:center;pointer-events:none;width:calc(100% - var(--sp-8));max-width:440px}
-.toast{pointer-events:auto;display:flex;align-items:center;gap:var(--sp-3);background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:var(--sp-3) var(--sp-4);box-shadow:0 12px 32px rgba(0,0,0,.45);font-size:var(--fs-sm);color:var(--text);animation:fadeUp var(--dur) var(--ease);width:100%}
+.toast{pointer-events:auto;display:flex;align-items:center;gap:var(--sp-3);background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:var(--sp-3) var(--sp-4);box-shadow:var(--shadow-md);font-size:var(--fs-sm);color:var(--text);animation:fadeUp var(--dur) var(--ease);width:100%}
 .toast .ico{width:16px;height:16px}
 .toast.ok{border-color:rgba(92,201,138,.4)}.toast.ok .ico{color:var(--running)}
 .toast.err{border-color:rgba(232,115,107,.4)}.toast.err .ico{color:var(--danger)}
@@ -366,7 +457,7 @@ svg{display:block;flex-shrink:0}
 
 /* ============ lock ============ */
 .lock{position:fixed;inset:0;z-index:var(--z-lock);background:var(--bg);display:flex;align-items:center;justify-content:center;padding:var(--sp-4)}
-.lock-box{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:var(--sp-7) var(--sp-6);width:100%;max-width:320px;text-align:center;box-shadow:0 32px 64px rgba(0,0,0,.5)}
+.lock-box{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:var(--sp-7) var(--sp-6);width:100%;max-width:320px;text-align:center;box-shadow:var(--shadow-xl)}
 .lock-icon{color:var(--gold);margin:0 auto var(--sp-3)}
 .lock-icon .ico{width:32px;height:32px;margin:0 auto}
 .lock-box h1{font-family:var(--serif);font-size:var(--fs-xl);font-weight:400;margin-bottom:var(--sp-5);color:var(--text)}
@@ -441,6 +532,9 @@ body.locked>*:not(#lockScreen):not(.toasts){display:none}
 <symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.8 2.8L16.2 9.5"/></symbol>
 <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r="1" fill="currentColor" stroke="none"/></symbol>
 <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18.5a4.5 4.5 0 0 1-.4-9A6 6 0 0 1 18 10.2a4.2 4.2 0 0 1-.6 8.3Z"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.6l2.6 5.5 5.9.8-4.3 4.2 1.05 6L12 17.3 6.75 20.1l1.05-6L3.5 9.9l5.9-.8Z"/></symbol>
+<symbol id="i-note" viewBox="0 0 24 24"><path d="M5 4.5h14v15H5z"/><path d="M8.5 9h7M8.5 12.5h7M8.5 16h4"/></symbol>
+<symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.3 0 2-.8 2-1.8 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-1 .8-1.8 1.8-1.8h1.4a4.3 4.3 0 0 0 4.3-4.3c0-3.7-3.8-6.7-8.5-6.7Z"/><circle cx="8" cy="10.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="8" r="1.1" fill="currentColor" stroke="none"/><circle cx="16" cy="10.5" r="1.1" fill="currentColor" stroke="none"/></symbol>
 <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="8" r="4.2"/><path d="M11 11 20 20M17.5 17.5l-2 2M20.5 14.5l-2 2"/></symbol>
 <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9.5 12 15.5 18 9.5"/></symbol>
 <symbol id="i-undo" viewBox="0 0 24 24"><path d="M4 11.5A8 8 0 1 1 6 17"/><path d="M4 5v6.5h6.5"/></symbol>
@@ -514,6 +608,12 @@ body.locked>*:not(#lockScreen):not(.toasts){display:none}
 </header>
 
 <div class="ctrl">
+  <div class="search">
+    <svg class="ico s-ico" aria-hidden="true"><use href="#i-search"/></svg>
+    <label class="vh" for="q">Search titles</label>
+    <input type="search" id="q" placeholder="Search titles, genres…" autocomplete="off" spellcheck="false">
+    <button class="s-clr" id="qClr" aria-label="Clear search" hidden><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg></button>
+  </div>
   <div class="filters" role="group" aria-label="Filter watchlist by type and status">
     <button class="fb" data-f="all"      aria-pressed="true">All</button>
     <button class="fb f-movie" data-f="movie"    aria-pressed="false">Movies</button>
@@ -525,6 +625,18 @@ body.locked>*:not(#lockScreen):not(.toasts){display:none}
     <button class="fb f-new"   data-f="new"      aria-pressed="false">New episodes</button>
   </div>
   <div class="cr">
+    <div class="gsel" id="ssel">
+      <label class="vh" for="sortBy">Sort by</label>
+      <select id="sortBy">
+        <option value="mins">Shortest first</option>
+        <option value="mins-desc">Longest first</option>
+        <option value="title">Title A–Z</option>
+        <option value="added">Recently added</option>
+        <option value="eps">Most episodes</option>
+        <option value="rating">Highest rated</option>
+      </select>
+      <svg class="ico chev" aria-hidden="true"><use href="#i-chev"/></svg>
+    </div>
     <div class="gsel" id="gsel">
       <label class="vh" for="genreF">Filter by genre</label>
       <select id="genreF"><option value="">All genres</option></select>
@@ -537,6 +649,7 @@ body.locked>*:not(#lockScreen):not(.toasts){display:none}
     <button class="ibtn" id="expBtn" aria-label="Back up watchlist as JSON"><svg class="ico" aria-hidden="true"><use href="#i-export"/></svg></button>
     <button class="ibtn" id="impBtn" aria-label="Restore watchlist from JSON backup"><svg class="ico" aria-hidden="true"><use href="#i-import"/></svg></button>
     <input type="file" id="impF" accept="application/json" class="vh">
+    <button class="ibtn" id="themeBtn" aria-label="Change theme"><svg class="ico" aria-hidden="true"><use href="#i-palette"/></svg></button>
     <button class="ibtn" id="pinBtn" aria-label="Change passcode"><svg class="ico" aria-hidden="true"><use href="#i-key"/></svg></button>
     <button class="abtn" id="addBtn"><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg>Add title</button>
     <div class="pw">
@@ -607,6 +720,13 @@ body.locked>*:not(#lockScreen):not(.toasts){display:none}
       </div>
     </div>
     <div class="field"><label for="mSu">Extra info</label><input type="text" id="mSu" placeholder="Netflix &middot; 2024 &middot; Cast"></div>
+    <div class="fr">
+      <div class="field">
+        <label for="mRate">Your rating</label>
+        <div class="stars" id="mRate" role="radiogroup" aria-label="Your rating out of 5"></div>
+      </div>
+      <div class="field"><label for="mNote">Note</label><input type="text" id="mNote" placeholder="A thought, a recommendation…" maxlength="140"></div>
+    </div>
     <input type="hidden" id="mImdb"><input type="hidden" id="mEdit" value=""><input type="hidden" id="mSeasons">
     <div class="mbtn">
       <button type="button" class="btn-x" id="mCancel">Cancel</button>
@@ -629,6 +749,16 @@ body.locked>*:not(#lockScreen):not(.toasts){display:none}
     <button type="button" class="btn-x" id="repCancel">Cancel</button>
     <button type="button" class="btn-go" id="repApply">Apply selected</button>
   </div>
+</div></div>
+
+<!-- ===== theme picker ===== -->
+<div class="mo-bg" id="themeDlg" role="dialog" aria-modal="true" aria-labelledby="themeTitle" hidden>
+<div class="mo">
+  <div class="mo-h">
+    <h2 id="themeTitle">Theme</h2>
+    <button class="mo-x" id="themeClose" aria-label="Close dialog"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="th-grid" id="thGrid" role="radiogroup" aria-label="Choose a theme"></div>
 </div></div>
 
 <!-- ===== change passcode ===== -->
@@ -763,10 +893,10 @@ async function load(){
       if(d.done&&d.done.length)d.done.forEach(r=>{if(!st[r])st[r]={s:2,ep:0}});
       // a passcode changed on another device wins over the local cache
       if(d.passHash)localStorage.setItem('wlHash',d.passHash);
-      return{st,cust:d.custom||[],ca:d.cache||{},ov:d.overrides||{},del:d.deleted||[],mig:d.mig||0}
+      return{st,cust:d.custom||[],ca:d.cache||{},ov:d.overrides||{},del:d.deleted||[],mig:d.mig||0,meta:d.meta||{}}
     }
   }catch(e){console.error('load failed',e);sy('error')}
-  sy('saved');return{st:{},cust:[],ca:{},ov:{},del:[],mig:MIG_VERSION}   // fresh doc needs no migration
+  sy('saved');return{st:{},cust:[],ca:{},ov:{},del:[],mig:MIG_VERSION,meta:{}}   // fresh doc needs no migration
 }
 /* Firestore rejects the whole document if any field is `undefined`, and the only
    symptom is the small sync pill flipping to "Offline". Drop them before sending. */
@@ -784,7 +914,7 @@ async function save(){
   if(saving){saveQueued=true;return true}
   saving=true;sy('saving');let ok=true;
   try{
-    const payload=strip({statuses:ST,custom:CI,cache:CA,overrides:OV,deleted:DEL,mig:MIG});
+    const payload=strip({statuses:ST,custom:CI,cache:CA,overrides:OV,deleted:DEL,mig:MIG,meta:META});
     const ph=localStorage.getItem('wlHash');if(ph)payload.passHash=ph;
     await setDoc(DR,payload);sy('saved')
   }
@@ -878,7 +1008,8 @@ const B=[
 {rank:54,title:"The Office (US)",sub:"NBC · 201 eps",type:"show",genre:"Comedy / Mockumentary",mins:4422,tag:"rec",eps:201},
 ];
 
-let ST={},CI=[],CA={},AF='all',GF='',showSV=false;
+let ST={},CI=[],CA={},AF='all',GF='',Q='',SORT='mins',showSV=false;
+let META={};   // per-title rating + note, kept out of ST so unticking can't destroy it
 /* OV  = per-rank overrides applied on top of the built-in B[] array, so the 81
         seeded titles are editable without touching the source data.
    DEL = soft-deleted ranks (built-in or custom). Reversible, hence undo. */
@@ -938,9 +1069,43 @@ function statusLine(d){
 /* seeded titles use "Crime / Thriller"; OMDb-filled ones use "Animation, Action, Adventure".
    split on both, or comma lists collapse into one bogus genre. */
 const genresOf=d=>(d.genre||'').split(/\s*[,/]\s*/).map(g=>g.trim()).filter(Boolean);
+
+/* Completed titles drop out of every tab except Done, one hour after you tick
+   them. The delay is the point: you keep seeing it just after marking it, so an
+   accidental tick is obvious and undoable, and it stops being clutter later.
+   A finished show with new episodes is exempt — it has become relevant again. */
+const ARCHIVE_AFTER=60*60*1000;
+function isArchived(d){
+  const s=gs(d.rank);
+  if(s.s!==2)return false;
+  if(newCount(d)>0)return false;
+  // titles completed before timestamps existed have no `t`, so they are old by
+  // definition and archive immediately rather than lingering forever
+  if(!s.t)return true;
+  return Date.now()-s.t>=ARCHIVE_AFTER;
+}
+const norm=s=>String(s||'').toLowerCase();
+function matchesQuery(d){
+  if(!Q)return true;
+  return norm(d.title).includes(Q)||norm(d.sub).includes(Q)||norm(d.genre).includes(Q);
+}
+const SORTS={
+  'mins':      (a,b)=>a.mins-b.mins,
+  'mins-desc': (a,b)=>b.mins-a.mins,
+  'title':     (a,b)=>a.title.localeCompare(b.title,undefined,{sensitivity:'base'}),
+  'added':     (a,b)=>(b.added||0)-(a.added||0)||b.rank-a.rank,
+  'eps':       (a,b)=>(b.eps||0)-(a.eps||0),
+  'rating':    (a,b)=>((META[b.rank]||{}).rating||0)-((META[a.rank]||{}).rating||0)||a.mins-b.mins,
+};
+const sorted=list=>[...list].sort(SORTS[SORT]||SORTS.mins);
+/* tiers are runtime bands, so they only make sense when sorting by runtime */
+const tiersApply=()=>SORT==='mins'||SORT==='mins-desc';
 /* two independent axes: type/status AND genre, so "Anime + Action" works */
 function mf(d){
+  if(!matchesQuery(d))return false;
   if(GF&&!genresOf(d).includes(GF))return false;
+  // hide long-finished titles from every tab except Done and New episodes
+  if(AF!=='done'&&AF!=='new'&&isArchived(d))return false;
   const s=gs(d.rank);
   if(AF==='all')return true;if(AF==='movie')return d.type==='movie';if(AF==='anime')return d.type==='anime';
   if(AF==='show')return d.type==='show';if(AF==='or')return d.or;if(AF==='watching')return s.s===1;
@@ -1006,6 +1171,46 @@ function slotHTML(d){
   }
   return `<button class="pbtn" data-act="watch" data-r="${d.rank}" aria-label="Start watching ${esc(d.title)}">${icon('play')}<span>Start</span></button>`;
 }
+
+/* ---------------- rating + note ----------------
+   Kept in META, not ST: unticking a title deletes its status entry, and your
+   opinion of something shouldn't vanish because you un-marked it as watched. */
+let rateValue=0;
+function paintStars(){
+  $('mRate').querySelectorAll('.star').forEach(s=>{
+    const v=+s.dataset.v;
+    s.setAttribute('aria-checked',String(v===rateValue));
+    s.classList.toggle('lit',v<=rateValue&&rateValue>0);
+  });
+  const clr=$('mRate').querySelector('.star-clr');
+  if(clr)clr.hidden=!rateValue;
+}
+function buildStars(){
+  const el=$('mRate');
+  el.innerHTML=[1,2,3,4,5].map(v=>
+    `<button type="button" class="star" role="radio" data-v="${v}" aria-checked="false" aria-label="${v} star${v>1?'s':''}">${icon('star')}</button>`
+  ).join('')+`<button type="button" class="star-clr" hidden>clear</button>`;
+  el.addEventListener('click',e=>{
+    const s=e.target.closest('.star');
+    if(s){rateValue=+s.dataset.v;paintStars();return}
+    if(e.target.closest('.star-clr')){rateValue=0;paintStars()}
+  });
+  // arrow keys move through the scale, as a radiogroup should
+  el.addEventListener('keydown',e=>{
+    if(!/^Arrow(Left|Right|Up|Down)$/.test(e.key))return;
+    e.preventDefault();
+    const dir=/Right|Up/.test(e.key)?1:-1;
+    rateValue=Math.max(0,Math.min(5,rateValue+dir));paintStars();
+    el.querySelector(`.star[data-v="${Math.max(1,rateValue)}"]`)?.focus();
+  });
+}
+const ratingHTML=r=>{
+  const m=META[r]||{};
+  let h='';
+  if(m.rating)h+=`<span class="i-rate" title="${m.rating} of 5">${icon('star')}${m.rating}</span>`;
+  if(m.note)h+=`<span class="i-note" title="${esc(m.note)}" aria-label="Note: ${esc(m.note)}">${icon('note')}</span>`;
+  return h;
+};
 
 /* ---------------- posters ----------------
    A watchlist with no artwork is just a spreadsheet. Posters are fetched only
@@ -1127,27 +1332,38 @@ function rowHTML(d,n,delay){
       </span>
       <span class="vh" data-st>${statusLine(d)}</span>
     </button>
-    <div class="imeta"><span class="islot">${epH}</span><span class="inew">${newBadge(d)}</span>${extra}${srcB}<span class="badge ${tC}">${d.type}</span><a class="iact a-imdb" href="${href}" target="_blank" rel="noopener" aria-label="${esc(d.title)} on IMDb, opens in a new tab">${icon('external')}</a>${editB}${delB}<span class="dur">${fD(d.mins,d.eps)}</span></div>
+    <div class="imeta"><span class="islot">${epH}</span><span class="inew">${newBadge(d)}</span><span class="irate">${ratingHTML(d.rank)}</span>${extra}${srcB}<span class="badge ${tC}">${d.type}</span><a class="iact a-imdb" href="${href}" target="_blank" rel="noopener" aria-label="${esc(d.title)} on IMDb, opens in a new tab">${icon('external')}</a>${editB}${delB}<span class="dur">${fD(d.mins,d.eps)}</span></div>
   </div>`;
 }
 
 /* ---------------- full render (filter / structural changes only) ---------------- */
 function render(){
-  const el=$('main'),v=[...all()].sort((a,b)=>a.mins-b.mins).filter(mf);
+  const el=$('main'),v=sorted(all()).filter(mf);
   if(!v.length){
     el.innerHTML='<div class="empty">Nothing here.<p>Try a different filter, or add a title.</p></div>';
     hud(v);renderRail();return;
   }
   const noAnim=prefersReduced();
   let h='',n=1,dy=0;
+  if(!tiersApply()){
+    h=`<div role="list">${v.map(d=>rowHTML(d,n++,noAnim?0:Math.min(dy++*.015,.35))).join('')}</div>`;
+    el.innerHTML=h;hud(v);renderRail();watchPosters(el);scheduleArchiveSweep();return;
+  }
+  // sections are built then ordered, so "longest first" reverses the runtime
+  // bands too — otherwise the tiers render ascending and fight the sort
+  const sections=[];
   tiers.forEach((t,i)=>{
     const p=i?tiers[i-1].x:0,items=v.filter(d=>d.mins>p&&d.mins<=t.x);
     if(!items.length)return;
-    h+=`<section class="tier" aria-label="${t.l}"><div class="tier-h"><h2 class="tier-l">${t.l}</h2><span class="tier-c">${items.length}</span><div class="tier-ln"></div></div><div role="list">`;
-    items.forEach(d=>{h+=rowHTML(d,n++,noAnim?0:Math.min(dy++*.015,.35))});
+    sections.push({label:t.l,items});
+  });
+  if(SORT==='mins-desc')sections.reverse();
+  sections.forEach(sec=>{
+    h+=`<section class="tier" aria-label="${sec.label}"><div class="tier-h"><h2 class="tier-l">${sec.label}</h2><span class="tier-c">${sec.items.length}</span><div class="tier-ln"></div></div><div role="list">`;
+    sec.items.forEach(d=>{h+=rowHTML(d,n++,noAnim?0:Math.min(dy++*.015,.35))});
     h+='</div></section>';
   });
-  el.innerHTML=h;hud(v);renderRail();watchPosters(el);
+  el.innerHTML=h;hud(v);renderRail();watchPosters(el);scheduleArchiveSweep();
 }
 
 /* ---------------- surgical row patch (status / episode changes) ----------------
@@ -1175,7 +1391,7 @@ function patchRow(r){
 }
 
 function hud(v){
-  if(!v)v=[...all()].sort((a,b)=>a.mins-b.mins).filter(mf);
+  if(!v)v=sorted(all()).filter(mf);
   const A=all(),dc=A.filter(d=>gs(d.rank).s===2),wc=A.filter(d=>gs(d.rank).s===1),
         rem=v.filter(d=>gs(d.rank).s!==2).reduce((a,b)=>a+b.mins,0),
         done=v.filter(d=>gs(d.rank).s===2).length;
@@ -1187,6 +1403,19 @@ function hud(v){
   $('ptx').textContent=`${done}/${v.length}`;
   const pb=$('pbar');pb.setAttribute('aria-valuenow',Math.round(p));
   pb.setAttribute('aria-valuetext',`${done} of ${v.length} complete`);
+}
+
+let archiveTimer=null;
+/* Rather than polling, wake up once, exactly when the next completed title
+   crosses the hour and should disappear from the current tab. */
+function scheduleArchiveSweep(){
+  clearTimeout(archiveTimer);
+  if(AF==='done'||AF==='new')return;
+  const now=Date.now();
+  const due=all().map(d=>gs(d.rank)).filter(s=>s.s===2&&s.t&&now-s.t<ARCHIVE_AFTER)
+                 .map(s=>s.t+ARCHIVE_AFTER-now);
+  if(!due.length)return;
+  archiveTimer=setTimeout(()=>render(),Math.max(1000,Math.min(...due)+250));
 }
 
 /* ---------------- handlers ---------------- */
@@ -1217,7 +1446,8 @@ W.tog=r=>{
   }else{
     // record HOW MANY you watched, not just that you're done. when a show later
     // gains a season, this stored count is what reveals there's something new.
-    ST[r]={s:2,ep:d.eps||s.ep||0};
+    // `t` is the completion time, which drives the one-hour archive delay.
+    ST[r]={s:2,ep:d.eps||s.ep||0,t:Date.now()};
   }
   const now=gs(r).s;
   save();refresh(r);
@@ -1271,7 +1501,7 @@ W.delC=async r=>{
   if(seeded){DEL.push(r);syncDel()}          // soft-delete: B[] itself is never mutated
   else CI=CI.filter(c=>c.rank!==r);
   delete ST[r];delete CA[r];
-  save();fillGenres();render();
+  save();applyTheme(currentTheme());fillGenres();render();
   toast(`Deleted "${item.title}"`,'ok',{label:'Undo',fn:()=>{
     if(seeded){DEL=DEL.filter(x=>x!==r);syncDel()}
     else if(snap.custom)CI.push(snap.custom);
@@ -1473,6 +1703,7 @@ function setErr(field,errId,msg){$(errId).innerHTML=`${icon('alert')}${esc(msg)}
 
 W.openM=editRank=>{
   clearErr();
+  rateValue=0;$('mNote').value='';
   $('mEdit').value=editRank||'';
   $('mTitle').textContent=editRank?'Edit title':'Add a title';
   if(editRank){
@@ -1483,9 +1714,11 @@ W.openM=editRank=>{
       $('mMi').value=d.eps?Math.round(d.mins/d.eps):d.mins;
       if(d.eps)$('mEp').value=d.eps;
       $('mSu').value=d.sub||'';
+      const m=META[editRank]||{};rateValue=m.rating||0;$('mNote').value=m.note||'';
       const c=CA[d.rank];if(c&&c.id)$('mImdb').value=c.id;
     }
   }else W.tyC();
+  paintStars();
   $('mReset').hidden=!(editRank&&isBuiltIn(editRank)&&OV[editRank]);
   openDlg('modal',$(editRank?'mTi':'mS'));
 };
@@ -1499,7 +1732,8 @@ W.resetOverride=async()=>{
 };
 W.closeM=()=>{
   closeDlg('modal');
-  ['mS','mTi','mGe','mSu','mMi','mEp','mImdb','mEdit','mSeasons'].forEach(id=>$(id).value='');
+  ['mS','mTi','mGe','mSu','mMi','mEp','mImdb','mEdit','mSeasons','mNote'].forEach(id=>$(id).value='');
+  rateValue=0;paintStars();
   $('sr').innerHTML='';$('mTy').value='movie';$('mTg').value='personal';
   $('mS').setAttribute('aria-expanded','false');clearErr();W.tyC();
 };
@@ -1543,9 +1777,13 @@ W.submit=async()=>{
     }
   }else{
     const mx=Math.max(...all().map(d=>d.rank),999);
-    const ni={rank:mx+1,title,sub,type,genre,mins:tot,tag,or:tag==='or',custom:true,...(eps?{eps}:{}),...(seasonsArr?{seasons:seasonsArr}:{})};
+    const ni={rank:mx+1,title,sub,type,genre,mins:tot,tag,or:tag==='or',custom:true,added:Date.now(),...(eps?{eps}:{}),...(seasonsArr?{seasons:seasonsArr}:{})};
     CI.push(ni);if(imdbID)CA[ni.rank]={id:imdbID};
   }
+  const targetRank=editRank||Math.max(...all().map(x=>x.rank),999);
+  const note=$('mNote').value.trim();
+  if(rateValue||note)META[targetRank]={...(META[targetRank]||{}),...(rateValue?{rating:rateValue}:{rating:undefined}),...(note?{note}:{note:undefined})};
+  else delete META[targetRank];
   save();W.closeM();fillGenres();render();
   toast(editRank?`Updated "${title}"`:`Added "${title}"`,'ok');
 };
@@ -1632,6 +1870,47 @@ W.applyRepairs=async()=>{
   toast(ok?`Fixed ${picked.length} show${picked.length>1?'s':''}.`:'Applied locally, but the sync failed.',ok?'ok':'err');
 };
 
+/* ---------------- themes ----------------
+   Theme is a per-device preference, so it lives in localStorage rather than the
+   synced document — your phone at night needn't match your desktop at noon. */
+const THEMES=[
+  {id:'midnight', name:'Midnight Gold', bg:'#1a1b24', surf:'#282a36', text:'#ece8db', dim:'#a5a094', accent:'#d4a853'},
+  {id:'noir',     name:'Noir',          bg:'#0d0d0f', surf:'#18181c', text:'#f2f0ee', dim:'#9d9891', accent:'#e8695d'},
+  {id:'frost',    name:'Frost',         bg:'#10151c', surf:'#1a212b', text:'#e8eef5', dim:'#94a3b3', accent:'#5ec8d8'},
+  {id:'parchment',name:'Parchment',     bg:'#f4f0e6', surf:'#fffdf7', text:'#26221b', dim:'#6b6355', accent:'#7d5f1a'},
+];
+const currentTheme=()=>{try{return localStorage.getItem('wlTheme')||'midnight'}catch(e){return 'midnight'}};
+function applyTheme(id){
+  const t=THEMES.find(x=>x.id===id)?id:'midnight';
+  if(t==='midnight')delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme=t;
+  try{localStorage.setItem('wlTheme',t)}catch(e){}
+  // keep the browser UI (address bar, status bar) in step with the page
+  const m=document.querySelector('meta[name="theme-color"]');
+  const bg=(THEMES.find(x=>x.id===t)||THEMES[0]).bg;
+  if(m)m.setAttribute('content',bg);
+  document.querySelectorAll('.th').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.th===t)));
+}
+W.openTheme=()=>{
+  const cur=currentTheme();
+  $('thGrid').innerHTML=THEMES.map(t=>`
+    <button class="th" role="radio" data-th="${t.id}" aria-checked="${t.id===cur}">
+      <span class="th-sw" style="background:${t.bg}">
+        <i style="background:${t.text}"></i><i style="background:${t.dim}"></i>
+        <i style="background:${t.surf};border:1px solid ${t.accent}33"></i>
+        <i style="background:${t.accent}"></i>
+        <i style="background:${t.surf};border:1px solid ${t.accent}33"></i>
+      </span>
+      <span class="th-n" style="background:${t.surf};color:${t.text};border-top-color:${t.accent}33">${esc(t.name)}<span style="color:${t.accent}">${icon('check')}</span></span>
+    </button>`).join('');
+  openDlg('themeDlg',$('thGrid').querySelector('[aria-checked=true]')||$('thGrid').firstElementChild);
+};
+$('thGrid')?.addEventListener('click',e=>{
+  const b=e.target.closest('.th');if(!b)return;
+  applyTheme(b.dataset.th);
+  announce(`${THEMES.find(x=>x.id===b.dataset.th).name} theme applied`);
+});
+
 /* ---------------- change passcode ----------------
    The hash lives in localStorage (so the gate works offline and before Firebase
    loads) and is mirrored to Firestore so other devices pick it up on next load. */
@@ -1669,7 +1948,7 @@ W.savePin=async()=>{
 
 /* ---------------- backup / restore ---------------- */
 W.exportJSON=()=>{
-  const blob=new Blob([JSON.stringify({statuses:ST,custom:CI,cache:CA,overrides:OV,deleted:DEL},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({statuses:ST,custom:CI,cache:CA,overrides:OV,deleted:DEL,meta:META},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download=`watchlist-backup-${new Date().toISOString().slice(0,10)}.json`;
   // the anchor must be in the document — Chrome can ignore a click on a detached one
@@ -1687,7 +1966,7 @@ W.importJSON=async input=>{
       const ok=await confirmDlg('Replace your watchlist?','This overwrites your current progress with the backup. Your current data cannot be recovered afterwards.','Replace');
       if(!ok){input.value='';return}
       ST=d.statuses||{};CI=d.custom||[];CA=d.cache||{};
-      OV=d.overrides||{};DEL=d.deleted||[];syncDel();   // older backups simply have none
+      OV=d.overrides||{};DEL=d.deleted||[];META=d.meta||{};syncDel();   // older backups simply have none
       save();fillGenres();render();toast('Restored from backup.','ok');
     }catch(e){console.error('import failed',e);toast('Could not read that file — make sure it is a watchlist JSON backup.','err')}
     input.value='';
@@ -1762,6 +2041,31 @@ $('repClose').onclick=()=>closeDlg('repDlg');
 $('repCancel').onclick=()=>closeDlg('repDlg');
 $('repApply').onclick=()=>W.applyRepairs();
 $('repDlg').addEventListener('click',e=>{if(e.target.id==='repDlg')closeDlg('repDlg')});
+buildStars();
+let qT;
+$('q').addEventListener('input',e=>{
+  const v=e.target.value;
+  $('qClr').hidden=!v;
+  clearTimeout(qT);
+  qT=setTimeout(()=>{                      // debounced: 193 rows re-render per keystroke otherwise
+    Q=v.trim().toLowerCase();
+    if(showSV)W.togSV(false);
+    render();
+    announce(Q?`${[...all()].filter(mf).length} matches for ${Q}`:'Search cleared');
+  },160);
+});
+$('q').addEventListener('keydown',e=>{if(e.key==='Escape'&&e.target.value){e.target.value='';e.target.dispatchEvent(new Event('input'))}});
+$('qClr').onclick=()=>{$('q').value='';$('q').dispatchEvent(new Event('input'));$('q').focus()};
+$('sortBy').onchange=e=>{
+  SORT=e.target.value;
+  $('ssel').classList.toggle('on',SORT!=='mins');
+  if(showSV)W.togSV(false);
+  render();
+  announce(`Sorted by ${e.target.selectedOptions[0].textContent}`);
+};
+$('themeBtn').onclick=()=>W.openTheme();
+$('themeClose').onclick=()=>closeDlg('themeDlg');
+$('themeDlg').addEventListener('click',e=>{if(e.target.id==='themeDlg')closeDlg('themeDlg')});
 $('pinBtn').onclick=()=>W.openPin();
 $('pinClose').onclick=()=>W.closePin();
 $('pinCancel').onclick=()=>W.closePin();
@@ -1790,7 +2094,7 @@ $('confirm').addEventListener('click',e=>{if(e.target.id==='confirm')resolveCf(f
 onAuthStateChanged(auth,async user=>{
   if(!user)return;
   const s=await load();
-  ST=s.st;CI=s.cust;CA=s.ca;OV=s.ov;DEL=s.del;MIG=s.mig;syncDel();
+  ST=s.st;CI=s.cust;CA=s.ca;OV=s.ov;DEL=s.del;MIG=s.mig;META=s.meta||{};syncDel();
   let dirty=clampProgress()>0;
   if(MIG<MIG_VERSION){ if(migrateDone())dirty=true; MIG=MIG_VERSION; dirty=true }
   if(dirty)save();
@@ -1798,6 +2102,11 @@ onAuthStateChanged(auth,async user=>{
   const nw=all().filter(d=>newCount(d)>0).length;
   if(nw)toast(`${nw} finished show${nw===1?' has':'s have'} new episodes.`,'ok');
 });
+/* PWA: registered late and failure-tolerant — a broken worker must never
+   stop the app loading. file:// has no service worker support at all. */
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(e=>console.warn('SW registration skipped',e)));
+}
 signInAnonymously(auth).catch(e=>{console.error('sign-in failed',e);sy('error');toast('Could not connect — working offline.','err')});
 fillGenres();render();
 </script>
