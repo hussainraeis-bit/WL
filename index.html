@@ -87,7 +87,7 @@ svg{display:block;flex-shrink:0}
 
 /* ============ control bar ============ */
 .ctrl{padding:var(--sp-3) var(--gutter);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-3);background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
-.filters{display:flex;gap:var(--sp-1);flex-wrap:wrap}
+.filters{display:flex;gap:var(--sp-1);flex-wrap:wrap;min-width:0}
 .fb{min-height:var(--tap-min);padding:var(--sp-1) var(--sp-3);border-radius:var(--radius);border:1px solid transparent;background:transparent;color:var(--muted);font-size:var(--fs-xs);cursor:pointer;font-weight:450;transition:color var(--dur) var(--ease),background var(--dur) var(--ease),border-color var(--dur) var(--ease)}
 .fb:hover{color:var(--text2);background:var(--surface)}
 .fb[aria-pressed=true]{background:var(--surface2);color:var(--text);border-color:var(--border2);font-weight:500}
@@ -144,18 +144,42 @@ svg{display:block;flex-shrink:0}
 .pfi{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold2),var(--gold));transition:width var(--dur-slow) var(--ease)}
 .pt{font-family:var(--mono);font-size:var(--fs-2xs);color:var(--muted);font-variant-numeric:tabular-nums}
 
+/* ============ continue watching rail ============ */
+.rail{padding:var(--sp-5) 0 var(--sp-2);border-bottom:1px solid var(--border);margin-bottom:var(--sp-2)}
+.rail[hidden]{display:none}
+.rail-h{display:flex;align-items:baseline;gap:var(--sp-3);margin-bottom:var(--sp-4)}
+.rail-h h2{font-family:var(--serif);font-size:var(--fs-lg);font-weight:400;color:var(--text)}
+.rail-h span{font-family:var(--mono);font-size:var(--fs-2xs);color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.rail-s{display:flex;gap:var(--sp-4);overflow-x:auto;padding-bottom:var(--sp-3);scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:var(--border3) transparent}
+.rail-s::-webkit-scrollbar{height:6px}
+.rail-s::-webkit-scrollbar-thumb{background:var(--border3);border-radius:3px}
+.rc{flex:0 0 132px;scroll-snap-align:start;text-align:left;background:none;border:none;padding:0;cursor:pointer;color:inherit;display:flex;flex-direction:column;gap:var(--sp-2)}
+.rc-art{display:block;position:relative;aspect-ratio:2/3;border-radius:10px;overflow:hidden;background:var(--surface2);border:1px solid var(--border);box-shadow:0 8px 24px rgba(0,0,0,.35);transition:transform var(--dur) var(--ease),border-color var(--dur) var(--ease)}
+.rc:hover .rc-art,.rc:focus-visible .rc-art{transform:translateY(-3px);border-color:var(--border3)}
+.rc-art img{width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0;z-index:1}
+.rc-inner{display:block;position:absolute;inset:0}
+.rc-inner .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:2rem;color:var(--deco);background:linear-gradient(150deg,var(--surface2),var(--surface))}
+.rc-art .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:2rem;color:var(--deco);background:linear-gradient(150deg,var(--surface2),var(--surface))}
+.rc-bar{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(0,0,0,.6);z-index:2}
+.rc-bar>span{display:block;height:100%;background:var(--watch)}
+.rc-pos{position:absolute;z-index:2;left:var(--sp-2);bottom:var(--sp-3);font-family:var(--mono);font-size:var(--fs-2xs);color:#fff;background:rgba(10,10,16,.78);padding:2px 6px;border-radius:4px;backdrop-filter:blur(4px)}
+.rc-t{font-size:var(--fs-xs);color:var(--text);line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rc-n{font-family:var(--mono);font-size:var(--fs-2xs);color:var(--muted)}
+
 /* ============ list ============ */
+.rail{max-width:1600px;margin:0 auto var(--sp-2);padding-left:var(--gutter);padding-right:var(--gutter)}
 .list{padding:0 var(--gutter) var(--sp-8);max-width:1600px;margin:0 auto}
 .tier{margin-top:var(--sp-6)}
 .tier-h{display:flex;align-items:center;gap:var(--sp-4);margin-bottom:var(--sp-2)}
-.tier-l{font-family:var(--mono);font-size:var(--fs-2xs);text-transform:uppercase;letter-spacing:.12em;color:var(--muted);white-space:nowrap}
+.tier-l{font-family:var(--mono);font-size:var(--fs-2xs);text-transform:uppercase;letter-spacing:.12em;color:var(--text2);white-space:nowrap}
+.tier-c{font-family:var(--mono);font-size:var(--fs-2xs);color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:1px 8px}
 .tier-ln{flex:1;height:1px;background:linear-gradient(90deg,var(--border2),transparent)}
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(212,168,83,0)}50%{box-shadow:0 0 16px 4px rgba(212,168,83,.28)}}
 
 .item{
-  display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:0 var(--sp-3);align-items:center;
+  display:grid;grid-template-columns:28px 40px minmax(0,1fr) auto;gap:0 var(--sp-3);align-items:center;
   border-radius:var(--radius);border:1px solid transparent;border-left:3px solid transparent;
   transition:background var(--dur) var(--ease),border-color var(--dur) var(--ease);
   animation:fadeUp var(--dur-slow) var(--ease) both;
@@ -172,6 +196,14 @@ svg{display:block;flex-shrink:0}
 .item.s-d .isub{color:var(--deco)}
 .item.hl{animation:pulse 1.5s var(--ease) 2;border-color:var(--gold);background:var(--gg)}
 
+.ipos{display:block;width:40px;aspect-ratio:2/3;border-radius:5px;overflow:hidden;background:var(--surface2);position:relative;flex-shrink:0;border:1px solid var(--border)}
+/* the placeholder is absolutely positioned, so a static image would paint
+   underneath it. the art must sit on its own layer above. */
+.ipos img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity var(--dur-slow) var(--ease)}
+.ipos img.on{opacity:1}
+.ipos .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:15px;color:var(--deco);background:linear-gradient(150deg,var(--surface2),var(--surface))}
+.item.s-d .ipos{filter:grayscale(.55) brightness(.75)}
+.item.s-d.has-new .ipos{filter:none}
 .inum{font-family:var(--mono);font-size:var(--fs-2xs);color:var(--muted);text-align:right;user-select:none;font-variant-numeric:tabular-nums;padding-left:var(--sp-2)}
 
 /* the status toggle IS the main row area -- a real button, so it is keyboard operable.
@@ -187,11 +219,16 @@ svg{display:block;flex-shrink:0}
 .item.s-w .ichk .i-play{opacity:1}
 .item.s-d .ichk{background:var(--gold);border-color:var(--gold);color:#1a1500}
 .item.s-d .ichk .i-check{opacity:1}
-.iinfo{min-width:0;flex:1}
+.iinfo{display:block;min-width:0;flex:1;overflow:hidden}
 .it{font-size:var(--fs-base);font-weight:400;color:var(--text);line-height:1.35;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.isub{font-size:var(--fs-xs);color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:350}
+/* MUST be block: this is a <span>, and overflow/text-overflow are ignored on
+   inline boxes, so the text escaped its column and widened the page. */
+.isub{display:block;font-size:var(--fs-xs);color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:350}
 
-.imeta{display:flex;align-items:center;gap:var(--sp-2);flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;padding:var(--sp-2) var(--sp-3) var(--sp-2) 0}
+/* min-width:0 is essential: grid items default to min-width:auto, so this
+   row's min-content width would force the whole grid wider than the
+   viewport and stretch the title column past the screen edge. */
+.imeta{display:flex;align-items:center;gap:var(--sp-2);flex-shrink:1;min-width:0;flex-wrap:wrap;justify-content:flex-end;padding:var(--sp-2) var(--sp-3) var(--sp-2) 0}
 
 /* episode stepper -- 28px targets (was 15px, below the WCAG 2.2 AA 24px floor) */
 .ep-t{display:inline-flex;align-items:center;gap:var(--sp-1);padding:2px;border-radius:6px;background:rgba(106,173,224,.10);border:1px solid rgba(106,173,224,.22)}
@@ -348,10 +385,15 @@ body.locked>*:not(#lockScreen):not(.toasts){display:none}
 @media(max-width:640px){
   :root{--fs-3xl:30px;--fs-2xl:24px;--fs-xl:19px}
   .hero h1{line-height:1.1}
-  .item{grid-template-columns:22px minmax(0,1fr);row-gap:0}
+  .item{grid-template-columns:20px 34px minmax(0,1fr);row-gap:0}
   /* meta moves to its own row instead of being display:none -- the old build
      hid Plan/OR/Rec/Running/Ended badges entirely on mobile, losing the data */
   .imeta{grid-column:1/-1;justify-content:flex-start;padding:0 var(--sp-2) var(--sp-3) var(--sp-3);gap:var(--sp-1) var(--sp-2)}
+  .ipos{width:34px}
+  .islot{min-width:auto}
+  .itog{min-width:0}
+  .iinfo{min-width:0}
+  .rc{flex:0 0 108px}
   .itog{padding-bottom:var(--sp-2)}
   .dur{min-width:auto;margin-left:auto}
   .filters{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
@@ -504,6 +546,7 @@ body.locked>*:not(#lockScreen):not(.toasts){display:none}
   </div>
 </div>
 
+<section class="rail" id="rail" aria-label="Continue watching" hidden></section>
 <main class="list" id="main" tabindex="-1"></main>
 <section class="sv" id="svw" aria-label="Statistics"></section>
 
@@ -964,6 +1007,93 @@ function slotHTML(d){
   return `<button class="pbtn" data-act="watch" data-r="${d.rank}" aria-label="Start watching ${esc(d.title)}">${icon('play')}<span>Start</span></button>`;
 }
 
+/* ---------------- posters ----------------
+   A watchlist with no artwork is just a spreadsheet. Posters are fetched only
+   as rows scroll into view, so browsing costs a handful of OMDb calls rather
+   than 193 up front, and each result is cached in Firestore so it's paid once. */
+const posterInFlight=new Set();
+let postersDisabled=false;   // set when OMDb reports its daily limit; resets next session
+let posterSaveTimer=null;
+const initial=s=>(String(s||'?').trim()[0]||'?').toUpperCase();
+
+function posterHTML(d,cls='ipos'){
+  const c=CA[d.rank]||{},url=c.poster;
+  const ph=`<span class="ph" aria-hidden="true">${esc(initial(d.title))}</span>`;
+  // the placeholder always renders, so the box never collapses or shifts
+  return `<span class="${cls}" data-poster="${d.rank}">${ph}${
+    url?`<img src="${esc(url)}" alt="" loading="lazy" decoding="async" class="on">`:''}</span>`;
+}
+function applyPoster(rank,url){
+  document.querySelectorAll(`[data-poster="${rank}"]`).forEach(box=>{
+    if(!url||box.querySelector('img'))return;
+    const img=new Image();
+    img.alt='';img.loading='lazy';img.decoding='async';
+    img.onload=()=>img.classList.add('on');
+    img.src=url;box.appendChild(img);
+  });
+}
+function schedulePosterSave(){
+  clearTimeout(posterSaveTimer);
+  posterSaveTimer=setTimeout(()=>save(),2500);   // batch a scroll's worth into one write
+}
+async function fetchPoster(rank){
+  const c=CA[rank];
+  if(postersDisabled||!c||!c.id||c.poster!==undefined||posterInFlight.has(rank))return;
+  posterInFlight.add(rank);
+  try{
+    const j=await fetch(`https://www.omdbapi.com/?apikey=${OK}&i=${c.id}`).then(r=>r.json());
+    if(j.Response==='False'){
+      // a quota or transport failure is NOT "this title has no poster". Caching it
+      // would blank the library permanently, so leave it unknown and stop asking.
+      if(/limit/i.test(j.Error||''))postersDisabled=true;
+      return;
+    }
+    const url=(j.Poster&&j.Poster!=='N/A')?j.Poster:'';
+    CA[rank]={...CA[rank],poster:url};           // '' means "asked, none exists" — never re-asked
+    applyPoster(rank,url);
+    schedulePosterSave();
+  }catch(e){console.warn('poster lookup failed',rank,e)}
+  finally{posterInFlight.delete(rank)}
+}
+const posterObserver=('IntersectionObserver'in window)?new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(!e.isIntersecting)return;
+    posterObserver.unobserve(e.target);
+    fetchPoster(+e.target.dataset.poster);
+  });
+},{rootMargin:'300px'}):null;
+
+function watchPosters(scope){
+  if(!posterObserver)return;
+  (scope||document).querySelectorAll('[data-poster]').forEach(b=>{
+    const c=CA[+b.dataset.poster];
+    if(c&&c.id&&c.poster===undefined)posterObserver.observe(b);
+  });
+}
+
+/* ---------------- continue watching ----------------
+   Anything in progress is scattered through a 193-row list sorted by runtime.
+   This pulls it to the top, where it's actually actionable. */
+function renderRail(){
+  const el=$('rail');
+  const items=all().filter(d=>gs(d.rank).s===1).sort((a,b)=>(gs(b.rank).ep||0)-(gs(a.rank).ep||0));
+  if(!items.length){el.hidden=true;el.innerHTML='';return}
+  el.hidden=false;
+  el.innerHTML=`<div class="rail-h"><h2>Continue watching</h2><span>${items.length} in progress</span></div>
+    <div class="rail-s">${items.map(d=>{
+      const s=gs(d.rank),cur=s.ep||0,pct=d.eps?Math.round(cur/d.eps*100):0;
+      const loc=d.eps?epLoc(cur,d.seasons,d.eps):null;
+      const pos=loc&&loc.started?locLabel(loc):(d.eps?`${cur}/${d.eps}`:'In progress');
+      return `<button class="rc" data-act="jump" data-r="${d.rank}" aria-label="Go to ${esc(d.title)}, ${esc(pos)}">
+        <span class="rc-art">${posterHTML(d,'rc-inner')}<span class="rc-pos">${esc(pos)}</span>
+          <span class="rc-bar"><span style="width:${pct}%"></span></span></span>
+        <span class="rc-t">${esc(d.title)}</span>
+        <span class="rc-n">${d.eps?`${d.eps-cur} left`:fD(d.mins,d.eps)}</span>
+      </button>`;
+    }).join('')}</div>`;
+  watchPosters(el);
+}
+
 /* ---------------- row markup ---------------- */
 function rowHTML(d,n,delay){
   const s=gs(d.rank),dn=s.s===2,wt=s.s===1,sc=dn?' s-d':wt?' s-w':'',c=CA[d.rank]||{};
@@ -988,6 +1118,7 @@ function rowHTML(d,n,delay){
   const srcB=sL?`<span class="badge ${sC}">${sL}</span>`:'';
   return `<div class="item${sc}${nwc?' has-new':''}" id="i-${d.rank}" role="listitem" style="animation-delay:${delay}s">
     <span class="inum" aria-hidden="true">${n}</span>
+    ${posterHTML(d)}
     <button class="itog" data-act="tog" data-r="${d.rank}" aria-pressed="${dn}">
       <span class="ichk" aria-hidden="true">${icon('check','ico i-check')}${icon('play','ico i-play')}</span>
       <span class="iinfo">
@@ -1005,18 +1136,18 @@ function render(){
   const el=$('main'),v=[...all()].sort((a,b)=>a.mins-b.mins).filter(mf);
   if(!v.length){
     el.innerHTML='<div class="empty">Nothing here.<p>Try a different filter, or add a title.</p></div>';
-    hud(v);return;
+    hud(v);renderRail();return;
   }
   const noAnim=prefersReduced();
   let h='',n=1,dy=0;
   tiers.forEach((t,i)=>{
     const p=i?tiers[i-1].x:0,items=v.filter(d=>d.mins>p&&d.mins<=t.x);
     if(!items.length)return;
-    h+=`<section class="tier" aria-label="${t.l}"><div class="tier-h"><h2 class="tier-l">${t.l}</h2><div class="tier-ln"></div></div><div role="list">`;
+    h+=`<section class="tier" aria-label="${t.l}"><div class="tier-h"><h2 class="tier-l">${t.l}</h2><span class="tier-c">${items.length}</span><div class="tier-ln"></div></div><div role="list">`;
     items.forEach(d=>{h+=rowHTML(d,n++,noAnim?0:Math.min(dy++*.015,.35))});
     h+='</div></section>';
   });
-  el.innerHTML=h;hud(v);
+  el.innerHTML=h;hud(v);renderRail();watchPosters(el);
 }
 
 /* ---------------- surgical row patch (status / episode changes) ----------------
@@ -1070,7 +1201,7 @@ function statusUndo(r,prev,label){
     announce(`${label} restored`);
   }};
 }
-const refresh=r=>{(AF==='watching'||AF==='done')?render():patchRow(r)};
+const refresh=r=>{(AF==='watching'||AF==='done')?render():(patchRow(r),renderRail())};
 
 /* The tick means one thing only: finished. From any state, one click.
    Unticking returns you to where you were — mid-series goes back to Watching,
@@ -1151,6 +1282,13 @@ W.delC=async r=>{
   }});
 };
 
+W.jump=r=>{
+  const e=$('i-'+r);if(!e)return;
+  e.scrollIntoView({behavior:prefersReduced()?'auto':'smooth',block:'center'});
+  e.classList.add('hl');
+  e.querySelector('.islot button,.itog')?.focus();
+  setTimeout(()=>e.classList.remove('hl'),2500);
+};
 W.rand=()=>{
   const v=[...all()].filter(mf).filter(d=>gs(d.rank).s===0);
   if(!v.length)return toast('No unwatched titles in this filter.','info');
@@ -1604,6 +1742,12 @@ $('main').addEventListener('click',e=>{
     case 'edit':W.editC(r);break;
     case 'del':W.delC(r);break;
   }
+});
+$('rail').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act="jump"]');if(!b)return;
+  const el=$('i-'+b.dataset.r);
+  if(!el){W.fil('all');requestAnimationFrame(()=>W.jump(+b.dataset.r));return}
+  W.jump(+b.dataset.r);
 });
 document.querySelectorAll('.fb').forEach(b=>b.addEventListener('click',()=>W.fil(b.dataset.f)));
 $('genreF').onchange=e=>{
