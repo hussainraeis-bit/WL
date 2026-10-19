@@ -1519,10 +1519,34 @@ W.jump=r=>{
   e.querySelector('.islot button,.itog')?.focus();
   setTimeout(()=>e.classList.remove('hl'),2500);
 };
+/* Plain Math.random() is uniform but memoryless: with ~80 titles a repeat inside
+   ten rolls is more likely than not, which reads as "it keeps picking the same
+   ones". So deal like a shuffled deck instead — every title in the current filter
+   comes up once before any comes up twice. The dealt list is per device (it
+   survives a reload), and running out only reshuffles the current filter's
+   titles, so working through Movies doesn't reset progress through Anime. */
+const RAND_KEY='wlRandSeen';
+const loadSeen=()=>{try{return JSON.parse(localStorage.getItem(RAND_KEY)||'[]')}catch(e){return[]}};
+const saveSeen=a=>{try{localStorage.setItem(RAND_KEY,JSON.stringify(a))}catch(e){}};
 W.rand=()=>{
   const v=[...all()].filter(mf).filter(d=>gs(d.rank).s===0);
   if(!v.length)return toast('No unwatched titles in this filter.','info');
-  const p=v[Math.floor(Math.random()*v.length)];
+  let seen=loadSeen(),dealt=new Set(seen);
+  let fresh=v.filter(d=>!dealt.has(d.rank));
+  if(!fresh.length){
+    // round over: reshuffle this filter, but never open the new round with the
+    // title that closed the last one
+    const last=seen[seen.length-1],inV=new Set(v.map(d=>d.rank));
+    seen=seen.filter(r=>!inV.has(r));
+    fresh=v.length>1?v.filter(d=>d.rank!==last):v;
+  }
+  const p=fresh[Math.floor(Math.random()*fresh.length)];
+  // drop deleted ranks so the stored list can't grow without bound
+  const live=new Set(all().map(d=>d.rank));
+  const next=[...seen.filter(r=>r!==p.rank&&live.has(r)),p.rank],nd=new Set(next);
+  saveSeen(next);
+  const left=v.filter(d=>!nd.has(d.rank)).length;
+  toast(`Picked: ${p.title}${left?` · ${left} more before any repeat`:''}`,'info',{label:'Another',fn:()=>W.rand()},'rand');
   if(showSV)W.togSV(false);
   render();
   requestAnimationFrame(()=>{
