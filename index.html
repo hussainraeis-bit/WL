@@ -689,8 +689,8 @@ body.locked>*:not(#lockScreen):not(.toasts){display:none}
   <form id="mForm" novalidate>
     <div class="field">
       <label for="mS">Search OMDb</label>
-      <input type="text" id="mS" placeholder="Type a title to autofill&hellip;" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="sr" aria-describedby="srHint">
-      <div class="fn" id="srHint">Optional &mdash; fills the fields below for you</div>
+      <input type="text" id="mS" placeholder="Type a title or paste an IMDb link&hellip;" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="sr" aria-describedby="srHint">
+      <div class="fn" id="srHint">Optional &mdash; fills the fields below for you. Can&rsquo;t find it? Paste its IMDb link.</div>
       <div class="sr" id="sr" role="listbox" aria-label="OMDb search results"></div>
     </div>
     <div class="field">
@@ -1601,6 +1601,11 @@ function renderSV(){
 let sT;
 W.dSearch=q=>{
   clearTimeout(sT);
+  // a pasted IMDb link (or bare tt-ID) skips search and looks the title up
+  // directly — the only reliable route when a common name like "Brothers" is
+  // buried under dozens of same-named results
+  const id=(q.match(/tt\d{7,}/)||[])[0];
+  if(id){$('sr').innerHTML='';$('mS').setAttribute('aria-expanded','false');sT=setTimeout(()=>oSel(id),500);return}
   if(q.length<2){$('sr').innerHTML='';$('mS').setAttribute('aria-expanded','false');return}
   sT=setTimeout(()=>oS(q),500);
 };
@@ -1674,6 +1679,8 @@ async function oSel(id){
   try{
     const r=await fetch(`https://www.omdbapi.com/?apikey=${OK}&i=${id}&plot=short`);
     const d=await r.json();
+    // a mistyped or unknown ID must not wipe what's already in the form
+    if(d.Response==='False')return toast(`OMDb has no title ${id} — check the link.`,'err');
     $('mTi').value=d.Title||'';$('mGe').value=d.Genre||'';
     $('mSu').value=[d.Year,d.Actors?d.Actors.split(',')[0]:''].filter(Boolean).join(' · ');
     $('mImdb').value=d.imdbID||'';
